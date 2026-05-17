@@ -16,7 +16,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "ZC-VIOS Core v1.1.0-alpha",
-  description: "Privacy-first creator workflow and planning workspace for solo operators.",
+  description: "Revenue-per-hour acceleration system for solo operators.",
 };
 
 export default function RootLayout({

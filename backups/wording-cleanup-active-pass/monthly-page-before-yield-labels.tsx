@@ -56,9 +56,9 @@ export default function MonthlyReportPage() {
               </p>
             </Card>
             <Card testId="monthly-report-average-ehr-card">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Average Session Yield</p>
+              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Average Progress</p>
               <p className="font-heading mt-2 text-3xl font-black" data-testid="monthly-report-average-ehr-value">
-                {report.averageEhr} units/hr
+                ${report.averageEhr}/h
               </p>
             </Card>
           </section>

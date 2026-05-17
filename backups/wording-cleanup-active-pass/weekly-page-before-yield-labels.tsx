@@ -130,8 +130,8 @@ export default function WeeklyReportPage() {
         body: [
           ["Revenue", `$${payload.report.revenue.toFixed(2)}`],
           ["Weekly Lever", payload.report.lever],
-          ["Focused session yield", `${payload.report.leverEhr} units/hr`],
-          ["Overall session yield", `${payload.report.totalEhr} units/hr`],
+          ["Lever Progress", `$${payload.report.leverEhr}/h`],
+          ["Total Progress", `$${payload.report.totalEhr}/h`],
           ["4-week slope", `${payload.report.slope}%`],
           ["Target range", `${payload.report.targetRange.min}% to ${payload.report.targetRange.max}%`],
           ["Momentum", payload.report.momentum],
@@ -227,9 +227,9 @@ export default function WeeklyReportPage() {
               </p>
             </Card>
             <Card testId="weekly-report-lever-ehr-card">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Focused Session Yield</p>
+              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Lever Progress</p>
               <p className="font-heading mt-2 text-3xl font-black" data-testid="weekly-report-lever-ehr-value">
-                {report.leverEhr} units/hr
+                ${report.leverEhr}/h
               </p>
             </Card>
             <Card testId="weekly-report-slope-card">
@@ -273,7 +273,7 @@ export default function WeeklyReportPage() {
             <div data-testid="weekly-report-projection-row">
               <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Projection (conditional)</p>
               <p className="mt-1 text-lg" data-testid="weekly-report-projection-value">
-                {report.projection.low} - {report.projection.high} projected units/hr
+                ${report.projection.low} - ${report.projection.high} progress metric
               </p>
             </div>
             <div className="md:col-span-2" data-testid="weekly-report-bottleneck-row">

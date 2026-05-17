@@ -18,7 +18,7 @@ Constraints:
 - Only choose from: Distribution, Conversion, Pricing, Traffic, Retention, Asset Build, Automation, Authority.
 - Neutral tone, no motivational language.
 - Strict JSON only.
-Primary metric: 4-week rolling progress trend.
+Primary metric: 4-week rolling EHR slope.
 Secondary: execution consistency, drift ratio, weeks on lever, weekly revenue, business type, user notes.
 Selection priorities:
 1) revenue near zero + assets exist -> Distribution

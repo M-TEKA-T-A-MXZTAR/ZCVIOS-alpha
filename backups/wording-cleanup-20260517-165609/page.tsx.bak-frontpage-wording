@@ -20,10 +20,10 @@ export default async function Home() {
             Alpha disclaimer: this template is focused on core engine behavior for local dev and iterative testing.
           </p>
           <h1 className="font-heading mt-5 text-4xl font-black tracking-tight md:text-6xl" data-testid="landing-main-heading">
-            Creator workflow clarity for real operator days.
+            Revenue-per-hour acceleration for real operator days.
           </h1>
           <p className="mt-6 max-w-2xl text-sm text-zinc-300 md:text-base" data-testid="landing-description-text">
-            Turn weekly intent into one practical lever and one daily mission. Review progress with private local metrics
+            Convert weekly intent into one weekly lever and one daily mission. Measure progress against your own 4-week EHR
             slope, not market noise.
           </p>
 
@@ -48,7 +48,7 @@ export default async function Home() {
 
         <aside className="grid gap-6" data-testid="landing-principles-grid">
           {[
-            "Central metric: useful progress per focused work session",
+            "Central metric: Effective Hourly Rate (EHR)",
             "Exactly one weekly lever",
             "Neutral language, no gamification",
             "Pause mode and reset mission built in",

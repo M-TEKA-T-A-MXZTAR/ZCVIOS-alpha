@@ -445,7 +445,7 @@ export const buildMonthlyReport = async (userId: string) => {
     slope,
     trend,
     notes: [
-      "Track drift logs weekly to keep progress interpretation clean.",
+      "Track drift logs weekly to keep EHR interpretation clean.",
       "Preserve one-lever discipline when slope is below target.",
       "Use pause mode when unavailable to avoid false inactivity signals.",
     ],
