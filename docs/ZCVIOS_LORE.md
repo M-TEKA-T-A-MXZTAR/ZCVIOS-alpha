@@ -26,9 +26,9 @@ ZC-VIOS is built on three principles:
 
 At any given time, one area of your business has the highest leverage. Working on six things at 16% each produces less than working on one thing at 100%. The system forces constraint: pick one lever, execute against it, measure the result.
 
-### 2. Effective Hourly Rate as North Star
+### 2. Useful Progress as North Star
 
-Revenue alone is misleading. Hours alone is incomplete. EHR (revenue ÷ hours) reveals the truth: are you building a business or building a job? The goal is not to work more hours—it's to increase the value of each hour worked.
+Raw output alone is misleading. Hours alone are incomplete. Useful progress per focused session gives the operator a clearer view of whether the work is becoming more effective. The goal is not to work more hours—it is to make each focused work block more useful.
 
 ### 3. Weekly Cadence, Daily Discipline
 
@@ -52,7 +52,7 @@ These are not arbitrary categories. They map to the fundamental equation:
 ```
 Revenue = Traffic × Conversion × Price × Retention − Churn
 Time = Manual Hours + Automated Hours
-EHR = Revenue ÷ Time
+Focused-session yield = useful outcome value ÷ focused time
 ```
 
 ## The Vision
@@ -65,11 +65,11 @@ The system does not tell you *how* to execute. It tells you *what* to execute ag
 
 ## Future Direction
 
-The current alpha focuses on the core engine: lever selection, mission generation, and EHR tracking. Future iterations may explore:
+The current alpha focuses on the core engine: lever selection, mission generation, and private progress tracking. Future iterations may explore:
 
 - Team coordination (multiple operators, shared levers)
-- Revenue forecasting (predictive EHR modeling)
+- Progress projection and planning-pattern review
 - Integration with external data sources (Stripe, analytics)
 - Mobile-first execution interface
 
-The foundation remains constant: **one lever, one mission, measured against EHR.**
+The foundation remains constant: **one lever, one mission, measured against useful progress.**

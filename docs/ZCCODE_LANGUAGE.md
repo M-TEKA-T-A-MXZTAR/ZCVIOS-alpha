@@ -72,7 +72,7 @@ A ZCcode block follows this pattern:
 [OUTPUTS]:
   - Current mission card
   - Weekly lever indicator
-  - EHR summary
+  - progress summary
   - Quick-log button
 [CONSTRAINTS]:
   - Must load within 2 seconds
@@ -80,7 +80,7 @@ A ZCcode block follows this pattern:
   - Graceful degradation if API fails
 [DEPENDENCIES]:
   - /rpc/mission
-  - /rpc/revenue (for EHR)
+  - /rpc/revenue (legacy internal endpoint for progress metrics)
   - SessionProvider
 ```
 
@@ -127,7 +127,7 @@ ZCcode blocks serve as inline documentation:
 /**
  * [SERVICE]: generateStrategy
  * [PURPOSE]: Select weekly lever based on signals
- * [INPUTS]: EHR slope, execution %, business signals
+ * [INPUTS]: progress trend, execution %, workflow signals
  * [OUTPUTS]: lever, reasoning, recommendation
  */
 export async function generateStrategy(input: StrategyInput) {

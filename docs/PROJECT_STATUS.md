@@ -28,7 +28,7 @@ The current project scope includes:
 - local development workflow,
 - work session logging,
 - weekly revenue entry,
-- Effective Hourly Rate reporting,
+- focused-session progress reporting,
 - deterministic weekly lever recommendations,
 - daily mission generation,
 - user settings,

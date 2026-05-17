@@ -3,7 +3,7 @@
 ## Milestone Overview
 
 **Version:** v1.2.0-alpha  
-**Focus:** Creator planning foundations, workflow tracking improvements, and EHR logic refinement  
+**Focus:** Creator planning foundations, workflow tracking improvements, and progress-metric logic refinement  
 **Target:** Strengthen the local-first core loop before expanding features
 
 This plan focuses on practical improvements to the current alpha system. It does not add credential collection, payment processing, private account access, or hidden platform automation.
@@ -19,7 +19,7 @@ This plan focuses on practical improvements to the current alpha system. It does
 **Changes required:**
 
 - Add `leverHistory` field or relation to user/weekly plan
-- Store lever, week, EHR at selection time, and EHR at week end
+- Store lever, week, progress metric at selection time, and progress metric at week end
 - Surface in weekly report
 - Include lever history in user data export where applicable
 
@@ -55,22 +55,22 @@ This plan focuses on practical improvements to the current alpha system. It does
 
 ---
 
-### D3: EHR Calculation Refinement
+### D3: Progress Metric Refinement
 
-**Scope:** Improve EHR calculation to handle edge cases and provide clearer reporting.
+**Scope:** Improve progress-metric calculation to handle edge cases and provide clearer reporting.
 
 **Changes required:**
 
 - Handle weeks with zero logged hours
 - Handle weeks with zero revenue
-- Add “lever-specific EHR” vs “total EHR” distinction in reports
+- Add “focused-session yield” vs “total-session yield” distinction in reports
 - Document calculation methodology
 
 **Acceptance criteria:**
 
 - [ ] Zero-hour weeks display “No hours logged” instead of `$0/h` or `NaN`
 - [ ] Zero-revenue weeks display “No revenue recorded”
-- [ ] Lever EHR only counts hours in `LEVER` category
+- [ ] Focused-session yield only counts hours in `LEVER` category
 - [ ] Calculation logic documented in code comments
 - [ ] No guaranteed-income or predictive-income language is added to the UI
 
@@ -87,14 +87,14 @@ ZCcode is used here as a structured specification and communication format. It i
 **Changes required:**
 
 - Add `zccode/` directory
-- Create spec files for mission generation, strategy selection, and EHR calculation
+- Create spec files for mission generation, strategy selection, and progress-metric calculation
 - Document format in `docs/ZCCODE_LANGUAGE.md`
 
 **Acceptance criteria:**
 
 - [ ] `zccode/mission.zc` defines mission generation interface
 - [ ] `zccode/strategy.zc` defines strategy selection interface
-- [ ] `zccode/ehr.zc` defines EHR calculation interface
+- [ ] `zccode/progress_metric.zc` defines progress-metric calculation interface
 - [ ] Format is parseable and consistent
 - [ ] Specs remain descriptive, not executable
 
@@ -108,14 +108,14 @@ ZCcode is used here as a structured specification and communication format. It i
 
 **Changes required:**
 
-- Add week-over-week EHR comparison
+- Add week-over-week progress comparison
 - Add execution consistency score based on hours logged compared with target hours
 - Add suggested focus based on lever history
 - Improve PDF export fields where applicable
 
 **Acceptance criteria:**
 
-- [ ] Weekly review shows EHR change from previous week
+- [ ] Weekly review shows progress change from previous week
 - [ ] Execution consistency displayed as percentage
 - [ ] Suggested next lever based on simple rules, not hidden automation
 - [ ] PDF export includes new fields
@@ -138,7 +138,7 @@ Below are issue specs for GitHub issue creation.
 
 **Scope:**
 
-- Persist lever selections with metadata: week, EHR at start, EHR at end
+- Persist lever selections with metadata: week, progress at start, progress at end
 - Display in weekly report
 - Include in data export
 
@@ -173,16 +173,16 @@ Below are issue specs for GitHub issue creation.
 
 ---
 
-### Issue: EHR Calculation Edge Cases
+### Issue: Progress Metric Calculation Edge Cases
 
-**Title:** `[Bug/Enhancement] Handle EHR calculation edge cases`  
+**Title:** `[Bug/Enhancement] Handle progress-metric calculation edge cases`  
 **Labels:** `bug`, `enhancement`, `v1.2.0`
 
 **Scope:**
 
 - Zero hours handling
 - Zero revenue handling
-- Lever-specific vs total EHR clarity
+- Focused-session vs total-session yield clarity
 
 **Acceptance criteria:**
 
@@ -203,7 +203,7 @@ Below are issue specs for GitHub issue creation.
 **Scope:**
 
 - Create `zccode/` directory
-- Spec files for mission, strategy, and EHR
+- Spec files for mission, strategy, and progress metrics
 - Update ZCcode language docs
 
 **Acceptance criteria:**
@@ -224,7 +224,7 @@ Below are issue specs for GitHub issue creation.
 
 **Scope:**
 
-- Week-over-week EHR comparison
+- Week-over-week progress comparison
 - Execution consistency score
 - Suggested next lever
 - PDF export updates
@@ -237,7 +237,7 @@ Below are issue specs for GitHub issue creation.
 - PDF includes new fields
 - Recommendations remain user-reviewed decision support
 
-**Dependencies:** Lever history, EHR refinement
+**Dependencies:** Lever history, progress-metric refinement
 
 ---
 

@@ -79,7 +79,7 @@ ZC-VIOS should not simply tell the user what to do.
 
 It should explain why a recommendation was made using clear business signals such as:
 
-- Effective Hourly Rate trend,
+- focused-session progress trend,
 - logged hours,
 - revenue entries,
 - execution consistency,
