@@ -31,12 +31,12 @@ ZC-VIOS helps the user answer one practical question each week:
 
 The system supports this by helping the user:
 
-- Review focused-session progress trends
+- Review Effective Hourly Rate trends
 - Compare execution consistency against available work time
 - Consider user-provided business signals
 - Receive a rule-based weekly lever recommendation
 - Generate one daily mission aligned to that lever
-- Track useful outcomes and focused work time against the user’s own historical baseline
+- Track revenue and hours against the user’s own historical baseline
 
 ZC-VIOS is a decision-support tool. It does not guarantee income, replace human judgment, or make business decisions on behalf of the user.
 
@@ -48,7 +48,7 @@ Success means users can answer:
 |----------|------------------|
 | What should I focus on this week? | Weekly lever recommendation |
 | What should I do today? | Daily mission suggestion |
-| Is my work becoming more effective? | Focused-session progress trend |
+| Is my business improving? | Effective Hourly Rate trend |
 | Am I working efficiently? | Hours logged compared with revenue generated |
 | Where did my time go? | Work log by category |
 

@@ -6,7 +6,7 @@ This document breaks the v1.2.0-alpha execution plan into practical implementati
 
 **Source of truth:** [V1_2_0_EXECUTION_PLAN.md](V1_2_0_EXECUTION_PLAN.md)
 
-The work queue is focused on local-first planning, workflow tracking, progress-metric clarity, and weekly review improvements.
+The work queue is focused on local-first planning, workflow tracking, EHR calculation clarity, and weekly review improvements.
 
 This work does not add credential collection, payment processing, hidden account access, or automated platform actions.
 
@@ -16,7 +16,7 @@ This work does not add credential collection, payment processing, hidden account
 
 | Order | Deliverable | Rationale |
 |-------|-------------|-----------|
-| 1 | **D3: Progress Metric Refinement** | Foundation for accurate reporting |
+| 1 | **D3: EHR Calculation Refinement** | Foundation for accurate reporting |
 | 2 | **D1: Lever History Tracking** | Required by D5, provides data for weekly review |
 | 3 | **D2: Mission Completion Tracking** | Independent, improves daily execution loop |
 | 4 | **D4: ZCcode Spec Files** | Documentation/specification work, no code dependencies |
@@ -26,11 +26,11 @@ This work does not add credential collection, payment processing, hidden account
 
 ## Maximum Leverage First
 
-Start with **D3: Progress Metric Refinement**.
+Start with **D3: EHR Calculation Refinement**.
 
 Rationale:
 
-- Useful progress is the core measurement signal of the system
+- EHR is the core measurement signal of the system
 - Edge case bugs reduce user trust
 - Clear calculations make reports more reliable
 - No dependencies are required
@@ -40,24 +40,24 @@ Rationale:
 
 ## Work Items
 
-### W1: Progress Metric Refinement
+### W1: EHR Calculation Refinement
 
 **Deliverable:** D3  
-**Purpose:** Eliminate edge case errors in progress-metric calculation and provide clearer distinctions between focused-session and total-session yield.
+**Purpose:** Eliminate edge case errors in EHR calculation and provide clearer distinctions between lever-specific and total EHR.
 
 **Scope:**
 
 - Fix division-by-zero handling when no hours are logged
 - Handle zero-revenue weeks clearly
-- Separate focused-session yield, using `LEVER` category hours only, from total-session yield, using all logged hours
+- Separate lever EHR, using `LEVER` category hours only, from total EHR, using all logged hours
 - Document calculation methodology in code comments
 
 **Acceptance criteria:**
 
 - [ ] Zero-hour weeks display “No hours logged” instead of `$0/h` or `NaN`
 - [ ] Zero-revenue weeks display “No revenue recorded”
-- [ ] Focused-session yield calculation excludes non-LEVER category hours
-- [ ] Total-session yield calculation includes all logged hours
+- [ ] Lever EHR calculation excludes non-LEVER category hours
+- [ ] Total EHR calculation includes all logged hours
 - [ ] Calculation logic is documented in `src/lib/metrics.ts` comments
 - [ ] UI does not imply guaranteed or predicted income
 
@@ -66,9 +66,9 @@ Rationale:
 **Implementation notes:**
 
 - Primary file: `src/lib/metrics.ts`
-- Check the progress-metric calculation function for division handling
+- Check `calcEhr` function for division handling
 - Check `weeklyHours` function for category filtering
-- Update report components to use the correct progress-metric variant
+- Update report components to use the correct EHR variant
 - Add JSDoc comments explaining formulas
 
 **Estimated scope:** Small, likely 1–2 files
@@ -83,13 +83,13 @@ Rationale:
 **Scope:**
 
 - Store lever selection with week metadata
-- Capture progress metric at selection time and week end
+- Capture EHR at selection time and week end
 - Display history in weekly report
 - Include lever history in data export where applicable
 
 **Acceptance criteria:**
 
-- [ ] `WeeklyPlan` or new model stores `lever`, `weekStart`, progress at selection, and progress at week end
+- [ ] `WeeklyPlan` or new model stores `lever`, `weekStart`, `ehrAtSelection`, and `ehrAtEnd`
 - [ ] Selection timestamp is recorded when lever is set
 - [ ] Weekly report shows last 4 weeks of lever history
 - [ ] Data export includes lever history
@@ -157,14 +157,14 @@ ZCcode is used as a communication and specification format. It is not executable
 - Create `zccode/` directory
 - Write spec for mission generation
 - Write spec for strategy selection
-- Write spec for progress-metric calculation
+- Write spec for EHR calculation
 - Update ZCcode language documentation
 
 **Acceptance criteria:**
 
 - [ ] `zccode/mission.zc` exists with mission generation interface
 - [ ] `zccode/strategy.zc` exists with strategy selection interface
-- [ ] `zccode/progress_metric.zc` exists with progress-metric calculation interface
+- [ ] `zccode/ehr.zc` exists with EHR calculation interface
 - [ ] Files follow documented ZCcode format
 - [ ] `docs/ZCCODE_LANGUAGE.md` is updated with spec file examples
 - [ ] Specs are clearly labelled as descriptive, not executable
@@ -175,7 +175,7 @@ ZCcode is used as a communication and specification format. It is not executable
 
 - Review `docs/ZCCODE_LANGUAGE.md` for format reference
 - Extract interface from `src/lib/ai.ts` for mission and strategy specs
-- Extract interface from `src/lib/metrics.ts` for progress-metric spec
+- Extract interface from `src/lib/metrics.ts` for EHR spec
 - Keep specs descriptive, not executable
 - Prefer clarity over clever syntax
 
@@ -190,14 +190,14 @@ ZCcode is used as a communication and specification format. It is not executable
 
 **Scope:**
 
-- Add week-over-week progress comparison
+- Add week-over-week EHR comparison
 - Add execution consistency score
 - Add suggested next lever based on user history and simple rules
 - Update PDF export with new fields where applicable
 
 **Acceptance criteria:**
 
-- [ ] Weekly review shows progress comparison against the previous week
+- [ ] Weekly review shows EHR comparison against the previous week
 - [ ] Execution consistency shows percentage of target hours logged
 - [ ] Suggested lever is shown as decision support, not a command
 - [ ] PDF export includes all new fields where applicable
@@ -206,7 +206,7 @@ ZCcode is used as a communication and specification format. It is not executable
 
 **Dependencies:**
 
-- W1: Progress Metric Refinement
+- W1: EHR Calculation Refinement
 - W2: Lever History Tracking
 
 **Implementation notes:**
@@ -226,7 +226,7 @@ ZCcode is used as a communication and specification format. It is not executable
 
 | Work Item | Status | Started | Completed | Notes |
 |-----------|--------|---------|-----------|-------|
-| W1: Progress Metric Refinement | Not Started | - | - | Start here |
+| W1: EHR Refinement | Not Started | - | - | Start here |
 | W2: Lever History | Not Started | - | - | After W1 |
 | W3: Mission Completion | Not Started | - | - | Independent |
 | W4: ZCcode Specs | Not Started | - | - | Independent |

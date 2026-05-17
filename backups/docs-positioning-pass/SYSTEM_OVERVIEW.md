@@ -2,13 +2,13 @@
 
 ## Project Purpose
 
-ZC-VIOS Core is a privacy-first creator workflow and planning workspace designed for solo operators and small business owners.
+ZC-VIOS Core is a revenue-per-hour planning and workflow measurement system designed for solo operators and small business owners.
 
-The system helps users focus on one practical business priority per week, track useful progress, and make clearer decisions about where to invest limited time.
+The system helps users focus on one practical business priority per week, track their Effective Hourly Rate (EHR), and make clearer decisions about where to invest limited time.
 
 The core philosophy:
 
-> One lever per week. One mission per day. Measured against useful progress.
+> One lever per week. One mission per day. Measured against your own EHR.
 
 ZC-VIOS is intended as a user-controlled planning workspace. It does not collect passwords, payment credentials, recovery codes, or private platform tokens. Core functionality can run with deterministic logic, and AI-assisted features are optional.
 
@@ -19,7 +19,7 @@ ZC-VIOS is intended as a user-controlled planning workspace. It does not collect
 | Concept | Description |
 |---------|-------------|
 | **Lever** | One of six business focus areas: Distribution, Conversion, Pricing, Traffic, Retention, Automation |
-| **Progress metric** | A private planning signal comparing useful outcome value with focused work time |
+| **EHR** | Effective Hourly Rate - revenue divided by logged hours |
 | **Weekly Plan** | Rule-based or user-selected lever for the week |
 | **Daily Mission** | Specific task derived from the active lever |
 | **Work Log** | Time entries categorized by activity type |
@@ -50,7 +50,7 @@ src/app/
 │   ├── revenue/            # Weekly revenue entry
 │   ├── onboarding/         # New user setup
 │   └── reports/
-│       ├── weekly/         # Weekly progress report
+│       ├── weekly/         # Weekly EHR report
 │       └── monthly/        # Monthly trend report
 └── rpc/                    # API routes
     ├── mission/            # Daily mission generation

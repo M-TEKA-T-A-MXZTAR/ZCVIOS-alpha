@@ -19,7 +19,7 @@
 - Weekly lever recommendation using deterministic logic and optional AI assistance
 - Daily mission generation
 - Work session logging
-- Weekly and monthly progress reports
+- Weekly and monthly EHR reports
 - Privacy controls, including data export and account deletion
 
 ---
@@ -33,7 +33,7 @@ The system is intended to help users:
 - review work and revenue signals,
 - choose one weekly business lever,
 - generate practical daily missions,
-- measure useful progress per focused session,
+- measure Effective Hourly Rate,
 - and improve execution consistency over time.
 
 ZC-VIOS is not intended to collect passwords, payment credentials, recovery codes, private platform tokens, or restricted account data.
@@ -78,7 +78,7 @@ ZC-VIOS is not intended to collect passwords, payment credentials, recovery code
 
 - Multi-user support for small teams
 - Optional user-authorized import/export workflows for revenue records
-- Historical progress trend review
+- Historical EHR trend review
 - Mobile-optimized interface for daily logging
 - Public-page review for user-provided storefront or product URLs
 - Plugin-style extensions that remain optional, transparent, and user-controlled
@@ -88,7 +88,7 @@ ZC-VIOS is not intended to collect passwords, payment credentials, recovery code
 Future work should remain aligned with these principles:
 
 - One lever per week remains the core constraint
-- useful progress remains the main measurement signal
+- EHR remains the main measurement signal
 - Deterministic mode always works without external AI dependencies
 - Privacy controls remain first-class features
 - No credential collection

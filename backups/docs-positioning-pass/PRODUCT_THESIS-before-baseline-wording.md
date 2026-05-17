@@ -36,7 +36,7 @@ The system supports this by helping the user:
 - Consider user-provided business signals
 - Receive a rule-based weekly lever recommendation
 - Generate one daily mission aligned to that lever
-- Track useful outcomes and focused work time against the user’s own historical baseline
+- Track revenue and hours against the user’s own historical baseline
 
 ZC-VIOS is a decision-support tool. It does not guarantee income, replace human judgment, or make business decisions on behalf of the user.
 
