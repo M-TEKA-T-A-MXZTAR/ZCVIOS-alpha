@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "mainBinaryName": "zcvios-desktop",
+  "app": {
+    "enableGTKAppId": true
+  },
+  "bundle": {
+    "targets": ["deb", "appimage"],
+    "category": "Productivity",
+    "publisher": "MXZTAR",
+    "copyright": "Copyright 2026 MXZTAR",
+    "homepage": "https://github.com/M-TEKA-T-A-MXZTAR/ZCVIOS-alpha",
+    "license": "MIT",
+    "licenseFile": "../../LICENSE",
+    "shortDescription": "Local-first planning and progress console.",
+    "longDescription": "ZCVIOS is a privacy-first local desktop planning console with deterministic progress workflows.",
+    "icon": ["icons/icon.png"],
+    "linux": {
+      "deb": {
+        "files": {}
+      },
+      "appimage": {
+        "bundleMediaFramework": false,
+        "files": {}
+      }
+    }
+  }
+}

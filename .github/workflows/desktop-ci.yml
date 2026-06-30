@@ -7,6 +7,7 @@ on:
       - 'src/application/identity.ts'
       - 'scripts/verify-desktop-shell.mjs'
       - 'scripts/verify-desktop-persistence.mjs'
+      - 'scripts/verify-linux-package-metadata.mjs'
       - '.github/workflows/desktop-ci.yml'
       - 'package.json'
   workflow_dispatch:
@@ -39,6 +40,7 @@ jobs:
         run: |
           node scripts/verify-desktop-shell.mjs
           node scripts/verify-desktop-persistence.mjs
+          node scripts/verify-linux-package-metadata.mjs
 
       - name: Install Tauri Linux dependencies
         env:
