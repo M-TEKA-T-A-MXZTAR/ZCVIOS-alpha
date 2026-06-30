@@ -54,7 +54,7 @@ const draftFromBaseline = (baseline: OperatorBaseline): BaselineDraft => ({
 });
 
 const formatRevenue = (cents: number) =>
-  new Intl.NumberFormat(undefined, {
+  new Intl.NumberFormat("en-NZ", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(cents / 100);
