@@ -33,3 +33,15 @@ export const decryptApiKey = (value: string) => {
   ]);
   return decrypted.toString("utf8");
 };
+
+export const decryptApiKeyOrNull = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return decryptApiKey(value);
+  } catch {
+    return null;
+  }
+};

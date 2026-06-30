@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { decryptApiKey } from "@/lib/crypto";
+import { decryptApiKeyOrNull } from "@/lib/crypto";
 import { runStrategyOnWeeklyRevenueSave } from "@/lib/engine";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProfile } from "@/lib/session";
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     });
 
     const user = await prisma.user.findUnique({ where: { id: profile.id } });
-    const apiKey = user?.openAiApiKeyEncrypted ? decryptApiKey(user.openAiApiKeyEncrypted) : null;
+    const apiKey = decryptApiKeyOrNull(user?.openAiApiKeyEncrypted);
 
     const strategy = await runStrategyOnWeeklyRevenueSave({
       userId: profile.id,
