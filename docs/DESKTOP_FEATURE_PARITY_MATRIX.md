@@ -42,10 +42,10 @@ This matrix prevents the desktop conversion from quietly dropping working ZCVIOS
 | Error handling | Next.js error boundary and route errors | In progress — desktop render boundary plus recoverable SQLite startup error and retry control added | M5 onward | Desktop error boundary, visible failure state, logs, and safe recovery path |
 | Data location visibility | Local SQLite through Prisma | In progress — `zcvios.sqlite3` path is displayed and the native data folder can be opened | M6 | Settings shows the application data path and provides an Open Data Folder action |
 | Backup | Manual export-oriented baseline | Planned | M8.8 | User-initiated backup creates a dated copy without freezing the UI |
-| Upgrade preservation | Not applicable to browser deployment | Planned — package generation and upgrade test pending | M7 | Installing a newer package preserves database and user exports |
-| Uninstall behaviour | Not applicable to browser deployment | Planned — package generation and uninstall/reinstall test pending | M7 | Program removal does not silently delete user-created data |
-| Ubuntu application menu | Not applicable | In progress — GTK app ID, executable name, launcher icon, publisher and Productivity category metadata staged; `.deb` install test pending | M7 | `.deb` install creates a correct launcher, icon, name, category, and executable entry |
-| Portable Linux launch | Not applicable | In progress — AppImage target and launcher icon metadata staged; artifact build and supported-baseline launch pending | M7 | AppImage launches on the supported baseline and uses the same documented data location |
+| Upgrade preservation | Not applicable to browser deployment | In progress — package payload replacement test preserves the SQLite profile; real version-to-version upgrade remains pending | M7 | Installing a newer package preserves database and user exports |
+| Uninstall behaviour | Not applicable to browser deployment | In progress — CI removes the extracted Debian application payload and confirms the external data directory remains intact; local package-manager test pending | M7 | Program removal does not silently delete user-created data |
+| Ubuntu application menu | Not applicable | In progress — generated Debian launcher, executable and icon are inspected; local Ubuntu menu confirmation pending | M7 | `.deb` install creates a correct launcher, icon, name, category, and executable entry |
+| Portable Linux launch | Not applicable | In progress — AppImage is generated, extracted, inspected and launched twice on Ubuntu 22.04 with persistent local data; local supported-machine launch pending | M7 | AppImage launches on the supported baseline and uses the same documented data location |
 
 ## Data-model coverage
 
