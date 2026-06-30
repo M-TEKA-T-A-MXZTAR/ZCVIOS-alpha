@@ -1,5 +1,17 @@
 import assert from "node:assert/strict";
-import type { StrategyInput, WorkLogRecord } from "../src/core/domain";
+import type {
+  DatedWorkLogRecord,
+  StrategyInput,
+  WeeklyRevenueRecord,
+  WorkLogRecord,
+} from "../src/core/domain";
+import {
+  DETERMINISTIC_MISSIONS,
+  decideMissionAction,
+  RESET_MISSION,
+  selectGeneratedMission,
+  toMissionPayload,
+} from "../src/core/missions";
 import {
   calcEhr,
   defaultLeverByHeuristic,
@@ -11,6 +23,7 @@ import {
   toHours,
   weeklyHours,
 } from "../src/core/progress";
+import { calculateMonthlyReport, calculateWeeklyReport } from "../src/core/reports";
 import { selectWeeklyLeverDeterministically } from "../src/core/strategy";
 
 const baseStrategyInput = (overrides: Partial<StrategyInput> = {}): StrategyInput => ({
@@ -136,4 +149,144 @@ assert.equal(statuses.driftStatus, "high");
 assert.equal(statuses.leverChangeRecommended, true);
 assert.equal(statuses.allocationAdjustment, "tighten_focus");
 
-console.log("PASS: deterministic progress and weekly strategy core verified.");
+assert.equal(
+  decideMissionAction({
+    forceRegenerate: false,
+    hasExistingMission: true,
+    hasEndedPauseToday: false,
+    daysInactive: 0,
+  }),
+  "existing",
+);
+assert.equal(
+  decideMissionAction({
+    forceRegenerate: true,
+    hasExistingMission: true,
+    hasEndedPauseToday: false,
+    daysInactive: 0,
+  }),
+  "generate",
+);
+assert.equal(
+  decideMissionAction({
+    forceRegenerate: false,
+    hasExistingMission: false,
+    hasEndedPauseToday: true,
+    daysInactive: 0,
+  }),
+  "reset",
+);
+assert.equal(
+  decideMissionAction({
+    forceRegenerate: false,
+    hasExistingMission: false,
+    hasEndedPauseToday: false,
+    daysInactive: 7,
+  }),
+  "reset",
+);
+assert.equal(RESET_MISSION.source, "RESET");
+assert.equal(DETERMINISTIC_MISSIONS.Distribution.recommendedMinutes, 60);
+
+const emptyMissionPayload = toMissionPayload(null, false, "Distribution");
+assert.equal(emptyMissionPayload.primaryTask, "No mission generated yet.");
+assert.equal(emptyMissionPayload.source, "TEMPLATE");
+assert.equal(emptyMissionPayload.canUseAi, false);
+
+const aiMission = selectGeneratedMission("Pricing", {
+  primaryTask: "Review one offer tier.",
+  supportTask: "Check delivery cost.",
+  doNotDoReminder: "Do not publish before review.",
+  recommendedMinutes: 40,
+  startNowStep: "Open the pricing sheet.",
+  successDefinition: "One tier reviewed.",
+  source: "AI",
+});
+assert.equal(aiMission.primaryTask, "Review one offer tier.");
+assert.equal(aiMission.lever, "Pricing");
+assert.equal(aiMission.source, "AI");
+
+const templateMission = selectGeneratedMission("Pricing", {
+  primaryTask: "Ignored fallback text.",
+  supportTask: null,
+  doNotDoReminder: "Ignored.",
+  recommendedMinutes: 10,
+  startNowStep: "Ignored.",
+  successDefinition: "Ignored.",
+  source: "TEMPLATE",
+});
+assert.equal(templateMission.primaryTask, DETERMINISTIC_MISSIONS.Pricing.primaryTask);
+assert.equal(templateMission.source, "TEMPLATE");
+
+const firstWeek = new Date(2026, 5, 1);
+const secondWeek = new Date(2026, 5, 8);
+const weeklyRevenues: WeeklyRevenueRecord[] = [
+  {
+    weekStart: firstWeek,
+    revenueCents: 6000,
+    trafficSessions: 30,
+    leadsGenerated: 4,
+    closedSales: 1,
+    churnedCustomers: 0,
+    grossMarginPct: 55,
+  },
+  {
+    weekStart: secondWeek,
+    revenueCents: 12000,
+    trafficSessions: 90,
+    leadsGenerated: 10,
+    closedSales: 2,
+    churnedCustomers: 0,
+    grossMarginPct: 60,
+  },
+];
+const reportLogs: DatedWorkLogRecord[] = [
+  { date: new Date(2026, 5, 2), category: "LEVER", minutes: 60 },
+  { date: new Date(2026, 5, 9), category: "LEVER", minutes: 120 },
+  { date: new Date(2026, 5, 10), category: "MAINTENANCE", minutes: 60 },
+];
+
+const weeklyReport = calculateWeeklyReport({
+  weekStart: secondWeek,
+  revenues: weeklyRevenues,
+  logs: reportLogs,
+  strategy: {
+    selectedLever: "Conversion",
+    reasoningSummary: "Conversion is the current constrained step.",
+    growthStatus: "within_target",
+    executionStatus: "strong",
+    driftStatus: "low",
+    allocationAdjustment: "none",
+  },
+  fullLoggingEnabled: true,
+});
+assert.equal(weeklyReport.revenue, 120);
+assert.equal(weeklyReport.leverEhr, 60);
+assert.equal(weeklyReport.totalEhr, 40);
+assert.equal(weeklyReport.slope, 0);
+assert.equal(weeklyReport.stage, "Stability");
+assert.equal(weeklyReport.momentum, "below required slope");
+assert.equal(weeklyReport.lever, "Conversion");
+assert.equal(weeklyReport.weeklySignals.trafficSessions, 90);
+assert.deepEqual(weeklyReport.chartData, [
+  { week: "W1", revenue: 60, ehr: 60 },
+  { week: "W2", revenue: 120, ehr: 60 },
+]);
+
+const monthlyReport = calculateMonthlyReport({
+  now: new Date(2026, 3, 1),
+  createdAt: new Date(2026, 0, 1),
+  weeks: weeklyRevenues,
+  logs: reportLogs,
+});
+assert.equal(monthlyReport.monthsActive, 2);
+assert.equal(monthlyReport.totalRevenue, 180);
+assert.equal(monthlyReport.totalHours, 4);
+assert.equal(monthlyReport.averageEhr, 45);
+assert.equal(monthlyReport.slope, 0);
+assert.deepEqual(monthlyReport.trend, [
+  { period: "W1", revenue: 60, ehr: 60 },
+  { period: "W2", revenue: 120, ehr: 60 },
+]);
+
+console.log("PASS: deterministic core workflows verified.");

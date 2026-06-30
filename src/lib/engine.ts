@@ -1,21 +1,22 @@
-import { DailyMission, Lever, MissionSource, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import {
+  decideMissionAction,
+  RESET_MISSION,
+  selectGeneratedMission,
+  toMissionPayload,
+} from "@/core/missions";
+import { calculateMonthlyReport, calculateWeeklyReport } from "@/core/reports";
 import { generateExecutionMission, generateStrategy } from "@/lib/ai";
-import { DETERMINISTIC_MISSIONS } from "@/lib/constants";
 import {
   calcEhr,
   defaultLeverByHeuristic,
-  momentumStatus,
-  projectionRange,
   rollingSlope,
-  stageFromEhr,
-  stageTarget,
   weeklyHours,
 } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
 import { endOfWeekMonday, startOfDay, startOfWeekMonday } from "@/lib/time";
 
 const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
-const AVERAGE_DAYS_PER_MONTH = 30.4;
 
 type StrategyArgs = {
   userId: string;
@@ -111,7 +112,10 @@ export const runStrategyOnWeeklyRevenueSave = async ({ userId, apiKey, weekStart
     note,
   });
 
-  const adjustment = hours.driftRatio > 0.2 && strategy.growthStatus === "below_target" ? "tighten_focus" : strategy.allocationAdjustment;
+  const adjustment =
+    hours.driftRatio > 0.2 && strategy.growthStatus === "below_target"
+      ? "tighten_focus"
+      : strategy.allocationAdjustment;
 
   const upserted = await prisma.weeklyPlan.upsert({
     where: {
@@ -150,34 +154,6 @@ type MissionArgs = {
   forceRegenerate?: boolean;
 };
 
-const toMissionPayload = (mission: DailyMission | null, canUseAi: boolean, weeklyLever: Lever) => {
-  if (!mission) {
-    return {
-      primaryTask: "No mission generated yet.",
-      supportTask: "",
-      doNotDoReminder: "",
-      recommendedMinutes: 30,
-      startNowStep: "",
-      successDefinition: "",
-      source: MissionSource.TEMPLATE,
-      lever: weeklyLever,
-      canUseAi,
-    };
-  }
-
-  return {
-    primaryTask: mission.primaryTask,
-    supportTask: mission.supportTask,
-    doNotDoReminder: mission.doNotDoReminder,
-    recommendedMinutes: mission.recommendedMinutes,
-    startNowStep: mission.startNowStep,
-    successDefinition: mission.successDefinition,
-    source: mission.source,
-    lever: mission.lever,
-    canUseAi,
-  };
-};
-
 export const getOrCreateDailyMission = async ({ userId, apiKey, forceRegenerate = false }: MissionArgs) => {
   const today = startOfDay();
   const weekStart = startOfWeekMonday(today);
@@ -194,9 +170,9 @@ export const getOrCreateDailyMission = async ({ userId, apiKey, forceRegenerate 
     orderBy: { endDate: "desc" },
   });
 
-  const hasEndedPauseToday =
-    lastPause &&
-    startOfDay(lastPause.endDate).getTime() === today.getTime();
+  const hasEndedPauseToday = Boolean(
+    lastPause && startOfDay(lastPause.endDate).getTime() === today.getTime(),
+  );
 
   const lastLeverLog = await prisma.workLogSession.findFirst({
     where: {
@@ -210,33 +186,31 @@ export const getOrCreateDailyMission = async ({ userId, apiKey, forceRegenerate 
     : 999;
   const daysInactive = Math.max(0, rawDaysInactive);
 
-  if (!forceRegenerate) {
-    const existing = await prisma.dailyMission.findUnique({
-      where: { userId_date: { userId, date: today } },
-    });
-    if (existing) {
-      return {
-        mission: toMissionPayload(existing, hasKey, weeklyLever),
-        inactivityLevel: daysInactive,
-      };
-    }
+  const existingMission = forceRegenerate
+    ? null
+    : await prisma.dailyMission.findUnique({
+        where: { userId_date: { userId, date: today } },
+      });
+
+  const action = decideMissionAction({
+    forceRegenerate,
+    hasExistingMission: Boolean(existingMission),
+    hasEndedPauseToday,
+    daysInactive,
+  });
+
+  if (action === "existing" && existingMission) {
+    return {
+      mission: toMissionPayload(existingMission, hasKey, weeklyLever),
+      inactivityLevel: daysInactive,
+    };
   }
 
-  if (hasEndedPauseToday || daysInactive >= 7) {
-    const reset = {
-      primaryTask: "Run a 30-minute reset block on the active weekly lever.",
-      supportTask: "Log one completed action before ending session.",
-      doNotDoReminder: "Do not redesign your weekly plan today.",
-      recommendedMinutes: 30,
-      startNowStep: "Set a 30-minute timer and begin the smallest lever action.",
-      successDefinition: "One lever task completed and logged.",
-      source: MissionSource.RESET,
-    };
-
+  if (action === "reset") {
     const mission = await prisma.dailyMission.upsert({
       where: { userId_date: { userId, date: today } },
-      update: { ...reset, lever: weeklyLever },
-      create: { userId, date: today, lever: weeklyLever, ...reset },
+      update: { ...RESET_MISSION, lever: weeklyLever },
+      create: { userId, date: today, lever: weeklyLever, ...RESET_MISSION },
     });
 
     return {
@@ -245,39 +219,37 @@ export const getOrCreateDailyMission = async ({ userId, apiKey, forceRegenerate 
     };
   }
 
-  const aiMission = await generateExecutionMission(
+  const generatedMission = await generateExecutionMission(
     apiKey,
     weeklyLever,
     user?.commandMode ?? true,
     `Business type: ${user?.businessType ?? "unknown"}. Weekly lever: ${weeklyLever}.`,
   );
-
-  const finalMission = aiMission.source === MissionSource.AI ? aiMission : DETERMINISTIC_MISSIONS[weeklyLever];
-  const source = aiMission.source;
+  const finalMission = selectGeneratedMission(weeklyLever, generatedMission);
 
   const mission = await prisma.dailyMission.upsert({
     where: { userId_date: { userId, date: today } },
     update: {
-      lever: weeklyLever,
+      lever: finalMission.lever,
       primaryTask: finalMission.primaryTask,
       supportTask: finalMission.supportTask,
       doNotDoReminder: finalMission.doNotDoReminder,
       recommendedMinutes: finalMission.recommendedMinutes,
       startNowStep: finalMission.startNowStep,
       successDefinition: finalMission.successDefinition,
-      source,
+      source: finalMission.source,
     },
     create: {
       userId,
       date: today,
-      lever: weeklyLever,
+      lever: finalMission.lever,
       primaryTask: finalMission.primaryTask,
       supportTask: finalMission.supportTask,
       doNotDoReminder: finalMission.doNotDoReminder,
       recommendedMinutes: finalMission.recommendedMinutes,
       startNowStep: finalMission.startNowStep,
       successDefinition: finalMission.successDefinition,
-      source,
+      source: finalMission.source,
     },
   });
 
@@ -319,60 +291,13 @@ export const buildWeeklyReport = async (userId: string) => {
     prisma.user.findUnique({ where: { id: userId }, select: { fullLoggingEnabled: true } }),
   ]);
 
-  const thisWeekRevenue = revenues.find((item) => item.weekStart.getTime() === weekStart.getTime()) ?? null;
-  const thisWeekLogs = logs.filter(
-    (item) => item.date.getTime() >= weekStart.getTime() && item.date.getTime() <= endOfWeekMonday(weekStart).getTime(),
-  );
-
-  const hours = weeklyHours(thisWeekLogs);
-  const leverEhr = calcEhr(thisWeekRevenue?.revenueCents ?? 0, hours.leverHours || 1);
-  const totalEhr = calcEhr(thisWeekRevenue?.revenueCents ?? 0, hours.totalHours || 1);
-
-  const ehrSeries = revenues.map((week) => {
-    const weekEnd = endOfWeekMonday(week.weekStart);
-    const weekLogs = logs.filter(
-      (item) => item.date.getTime() >= week.weekStart.getTime() && item.date.getTime() <= weekEnd.getTime(),
-    );
-    const weekHours = weeklyHours(weekLogs);
-    return calcEhr(week.revenueCents, weekHours.leverHours || 1);
-  });
-
-  const slope = rollingSlope(ehrSeries.slice(-4));
-  const stage = stageFromEhr(leverEhr);
-  const targetRange = stageTarget(stage);
-  const momentum = momentumStatus(slope, targetRange);
-  const projection = projectionRange(leverEhr, slope);
-
-  return {
+  return calculateWeeklyReport({
     weekStart,
-    revenue: Number(((thisWeekRevenue?.revenueCents ?? 0) / 100).toFixed(2)),
-    weeklySignals: {
-      trafficSessions: thisWeekRevenue?.trafficSessions ?? null,
-      leadsGenerated: thisWeekRevenue?.leadsGenerated ?? null,
-      closedSales: thisWeekRevenue?.closedSales ?? null,
-      churnedCustomers: thisWeekRevenue?.churnedCustomers ?? null,
-      grossMarginPct: thisWeekRevenue?.grossMarginPct ?? null,
-    },
-    leverEhr,
-    totalEhr,
+    revenues,
+    logs,
+    strategy,
     fullLoggingEnabled: user?.fullLoggingEnabled ?? false,
-    slope,
-    targetRange,
-    momentum,
-    stage,
-    projection,
-    lever: strategy?.selectedLever ?? "Distribution",
-    bottleneckNote: strategy?.reasoningSummary ?? "Revenue entry saved. Waiting for more execution history.",
-    growthStatus: strategy?.growthStatus ?? "within_target",
-    driftStatus: strategy?.driftStatus ?? "low",
-    executionStatus: strategy?.executionStatus ?? "moderate",
-    allocationAdjustment: strategy?.allocationAdjustment ?? "none",
-    chartData: revenues.map((item, index) => ({
-      week: `W${index + 1}`,
-      revenue: Number((item.revenueCents / 100).toFixed(2)),
-      ehr: ehrSeries[index] ?? 0,
-    })),
-  };
+  });
 };
 
 export const buildWeeklyReviewPacket = async (userId: string) => {
@@ -432,47 +357,12 @@ export const buildMonthlyReport = async (userId: string) => {
     orderBy: { date: "asc" },
   });
 
-  const createdAt = user?.createdAt ?? new Date();
-  const monthsActive = Math.max(
-    1,
-    Math.floor(
-      (startOfDay().getTime() - startOfDay(createdAt).getTime()) /
-        (MILLISECONDS_PER_DAY * AVERAGE_DAYS_PER_MONTH),
-    ),
-  );
-
-  const totalRevenue = weeks.reduce((acc, item) => acc + item.revenueCents, 0) / 100;
-  const totalHours = logs.reduce((acc, item) => acc + item.minutes, 0) / 60;
-  const avgEhr = totalHours ? Number((totalRevenue / totalHours).toFixed(2)) : 0;
-
-  const trend = weeks.map((week, index) => {
-    const weekEnd = endOfWeekMonday(week.weekStart);
-    const weekLogs = logs.filter(
-      (item) => item.date.getTime() >= week.weekStart.getTime() && item.date.getTime() <= weekEnd.getTime(),
-    );
-    const weekHours = weeklyHours(weekLogs);
-    return {
-      period: `W${index + 1}`,
-      revenue: Number((week.revenueCents / 100).toFixed(2)),
-      ehr: calcEhr(week.revenueCents, weekHours.leverHours || 1),
-    };
+  return calculateMonthlyReport({
+    now: startOfDay(),
+    createdAt: startOfDay(user?.createdAt ?? new Date()),
+    weeks,
+    logs,
   });
-
-  const slope = rollingSlope(trend.slice(-4).map((item) => item.ehr));
-
-  return {
-    monthsActive,
-    totalRevenue: Number(totalRevenue.toFixed(2)),
-    totalHours: Number(totalHours.toFixed(2)),
-    averageEhr: avgEhr,
-    slope,
-    trend,
-    notes: [
-      "Track drift logs weekly to keep EHR trend interpretation clean.",
-      "Preserve one-lever discipline when slope is below target.",
-      "Use pause mode when unavailable to avoid false inactivity signals.",
-    ],
-  };
 };
 
 export const prismaJson = (value: Prisma.JsonValue) => JSON.stringify(value, null, 2);
