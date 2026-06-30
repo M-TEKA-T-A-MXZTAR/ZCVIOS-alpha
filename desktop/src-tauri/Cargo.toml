@@ -17,3 +17,5 @@ tauri-build = { version = "=2.6.3", features = [] }
 [dependencies]
 tauri = { version = "=2.11.1", features = [] }
 tauri-plugin-opener = "=2.5.4"
+# cookie 0.18.1 currently requires the pre-0.3.52 parsing API.
+time = "=0.3.51"
