@@ -2,22 +2,39 @@
 
 This directory contains the controlled desktop migration built with Tauri 2, React, TypeScript and Vite.
 
-## Current M7.2 scope
+## Current M8.1 scope
 
 - branded native window
-- working Dashboard/System navigation
+- working Dashboard, Operator Baseline and System navigation
 - versioned local SQLite database at the native application-data location
 - durable `local-owner` profile and migration-history ledger
-- Linux GTK application identity based on `nz.co.mxztar.zcvios`
-- stable `zcvios-desktop` executable name
-- ZCVIOS launcher icon and Productivity category metadata
-- bounded Debian and AppImage test-package generation
-- generated launcher, binary, icon and package-field inspection
-- packaged restart and data-preservation smoke tests
-- no business workflow records yet
-- no hidden application server in production
+- editable local operator baseline
+- focused-hours capacity stored as a whole number
+- weekly revenue baseline stored as integer cents
+- primary sales channel and active offer stored locally
+- save, reload, validation and restart-persistence tests
+- Linux Debian and AppImage test-package generation and persistence checks
+- no lever recommendation, mission generation, work log or revenue-history workflow yet
+- no AI, public-page crawling, credential collection or hidden application server
 
-The SQLite adapter remains implemented in Rust with bundled SQLite. Linux packaging is isolated in `src-tauri/tauri.linux.conf.json`; the cross-platform base configuration remains explicitly non-bundling.
+The SQLite adapter remains implemented in Rust with bundled SQLite. The React frontend uses typed Tauri commands and contains no raw SQL.
+
+## Product boundary
+
+M8.1 records the operator's current starting point. It does not yet decide what the operator should do.
+
+The intended product sequence is:
+
+```text
+operator baseline
+→ focused work logs
+→ weekly revenue records
+→ deterministic weekly lever
+→ daily mission
+→ weekly review
+```
+
+Lever and mission logic must remain disconnected until the work-log and weekly-revenue evidence exists.
 
 ## Desktop database
 
@@ -27,13 +44,22 @@ The native bootstrap creates:
 <application data directory>/zcvios.sqlite3
 ```
 
-Schema version 1 contains only:
+Schema version 2 contains:
 
 - `migration_history`
 - `local_profiles`
 - `application_settings`
+- `operator_baselines`
 
-Work logs, revenue, plans, missions and reports remain disconnected until their controlled vertical milestones.
+The `operator_baselines` row belongs to `local-owner` and stores:
+
+- operator or business display name
+- focused work hours available per week
+- weekly revenue baseline in integer cents
+- primary sales channel
+- active offer or product focus
+
+Revenue history, plans, missions, work sessions and reports remain disconnected until their controlled vertical milestones.
 
 ## Linux package identity
 
@@ -59,10 +85,12 @@ The package job:
 3. extracts and inspects the AppImage payload
 4. launches the AppImage twice against an isolated data directory
 5. extracts the Debian payload, launches it, removes the extracted application files, then extracts and launches it again
-6. verifies that the `local-owner` profile and schema-v1 migration ledger survive those replacement cycles
+6. verifies that the `local-owner` profile, operator baseline and schema-v2 migration ledger survive those replacement cycles
 7. uploads a short-lived archive plus SHA-256 checksum
 
 A real local Ubuntu menu inspection and a user-driven package installation remain required before the M7 rows can be marked Verified.
+
+Windows and macOS remain planned supported platforms. Their unsigned test-build contracts belong to a separate portability milestone and are not added to M8.1.
 
 ## Ubuntu development prerequisites
 

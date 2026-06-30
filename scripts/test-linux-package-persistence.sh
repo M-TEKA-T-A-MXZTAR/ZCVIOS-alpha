@@ -56,6 +56,16 @@ with sqlite3.connect(path) as connection:
         "UPDATE local_profiles SET display_name = ? WHERE id = 'local-owner'",
         (marker,),
     )
+    connection.execute(
+        """
+        UPDATE operator_baselines
+        SET focused_hours_per_week = 12,
+            weekly_revenue_cents = 3456,
+            primary_channel = 'Package Test Channel',
+            active_offer = 'Package Test Offer'
+        WHERE profile_id = 'local-owner'
+        """
+    )
     connection.commit()
     row = connection.execute(
         "SELECT display_name FROM local_profiles WHERE id = 'local-owner'"
@@ -77,6 +87,13 @@ with sqlite3.connect(path) as connection:
     profile = connection.execute(
         "SELECT display_name FROM local_profiles WHERE id = 'local-owner'"
     ).fetchone()
+    baseline = connection.execute(
+        """
+        SELECT focused_hours_per_week, weekly_revenue_cents, primary_channel, active_offer
+        FROM operator_baselines
+        WHERE profile_id = 'local-owner'
+        """
+    ).fetchone()
     migrations = connection.execute(
         "SELECT COUNT(*) FROM migration_history"
     ).fetchone()
@@ -86,9 +103,11 @@ with sqlite3.connect(path) as connection:
 
 if profile != (marker,):
     raise SystemExit(f"Expected profile marker {marker!r}, received {profile!r}")
-if migrations != (1,) or schema_version != (1,):
+if baseline != (12, 3456, "Package Test Channel", "Package Test Offer"):
+    raise SystemExit(f"Expected operator baseline marker, received {baseline!r}")
+if migrations != (2,) or schema_version != (2,):
     raise SystemExit(
-        f"Expected one schema-v1 migration, received count={migrations}, max={schema_version}"
+        f"Expected two migrations through schema v2, received count={migrations}, max={schema_version}"
     )
 PY
 }
@@ -127,9 +146,9 @@ run_gui_smoke /tmp/zcvios-deb-second.log "$deb_binary"
 assert_profile_marker "$deb_database" "Debian Persistence Test"
 
 cat >"$bundle_root/persistence-verification.txt" <<EOF_RESULT
-PASS: AppImage launch preserved the local-owner profile across restart.
+PASS: AppImage launch preserved the local-owner profile and operator baseline across restart.
 PASS: Removing the extracted Debian application payload preserved zcvios.sqlite3.
-PASS: Re-extracting the Debian package reopened the existing profile and schema-v1 migration ledger.
+PASS: Re-extracting the Debian package reopened the existing profile and schema-v2 migration ledger.
 EOF_RESULT
 
 cat "$bundle_root/persistence-verification.txt"
