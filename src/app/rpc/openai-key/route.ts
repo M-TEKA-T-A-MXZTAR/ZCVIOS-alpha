@@ -2,17 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { encryptApiKey } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { unauthorized } from "@/lib/http";
 
 const schema = z.object({ apiKey: z.string().min(20) });
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: profile.id },
     select: { openAiApiKeyEncrypted: true, openAiKeyLast4: true },
   });
 
@@ -23,8 +23,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   try {
     const body = await req.json();
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const encrypted = encryptApiKey(apiKey.trim());
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: profile.id },
       data: {
         openAiApiKeyEncrypted: encrypted,
         openAiKeyLast4: apiKey.trim().slice(-4),
@@ -46,11 +46,11 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: profile.id },
     data: {
       openAiApiKeyEncrypted: null,
       openAiKeyLast4: null,
