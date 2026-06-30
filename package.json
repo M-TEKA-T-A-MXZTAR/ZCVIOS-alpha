@@ -12,7 +12,8 @@
     "prisma:push": "DATABASE_URL=file:./dev.db prisma db push",
     "preseed": "npm run prisma:generate",
     "seed": "DATABASE_URL=file:./dev.db node prisma/seed.mjs",
-    "test:core": "tsx scripts/verify-core-engine.ts && tsx scripts/verify-application-services.mjs && tsx scripts/verify-identity-boundary.mjs",
+    "verify:desktop-shell": "node scripts/verify-desktop-shell.mjs",
+    "test:core": "tsx scripts/verify-core-engine.ts && tsx scripts/verify-application-services.mjs && tsx scripts/verify-identity-boundary.mjs && npm run verify:desktop-shell",
     "test": "/root/.venv/bin/python -m pytest -q tests/test_rpc_auth_guards.py tests/test_rpc_authenticated_flows.py tests/test_strategy_trigger_scope.py",
     "test:privacy": "/root/.venv/bin/python -m pytest -q tests/test_rpc_authenticated_flows.py -k export"
   },
