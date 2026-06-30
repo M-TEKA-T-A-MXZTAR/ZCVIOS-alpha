@@ -87,8 +87,52 @@ Initial desktop packaging targets:
 
 - Debian package (`.deb`) as the primary Ubuntu installer
 - AppImage as the portable Linux fallback
+- unsigned Windows and macOS test packages in later controlled portability milestones
 
 The desktop workstream must not displace the creator-engine priorities by combining unrelated feature expansion with migration work. Each implementation PR should address one bounded architectural or workflow milestone.
+
+---
+
+## Optional AI Runtime Workstream
+
+The desktop AI runtime is planned only after the deterministic product loop has been restored and verified.
+
+The required sequence is:
+
+1. local operator baseline
+2. focused work logging
+3. weekly revenue history
+4. deterministic weekly lever
+5. template daily mission
+6. weekly review and export
+7. provider-neutral AI contract
+8. local Ollama detection and text generation
+9. optional Gemini and OpenAI adapters
+10. Windows and macOS provider verification
+
+The planned provider order is:
+
+- **Off / deterministic** — default and always available
+- **Local Ollama** — preferred optional provider
+- **Gemini API** — optional bring-your-own-key cloud provider
+- **OpenAI API** — optional bring-your-own-key cloud provider
+
+ZCVIOS will bundle provider integration and guided setup, not Ollama binaries or model weights. Users must deliberately install Ollama and choose a model suitable for their hardware. A practical initial local text-model baseline is `llama3.2:3b`, with a smaller fallback for lower-resource systems.
+
+The AI runtime must include:
+
+- one request at a time
+- visible working and cancellation states
+- conservative resource modes
+- loopback-only local connections by default
+- secure cloud-key storage outside SQLite
+- explicit cloud-data consent
+- deterministic fallback when a provider fails
+- no silent model installation or download
+
+See [Local-First AI Runtime Plan](LOCAL_AI_RUNTIME.md).
+
+Rendering engines are outside this workstream. Image generation, mockups, patterns, vectors, and similar production capabilities require separate hardware and Windows/macOS verification.
 
 ---
 
