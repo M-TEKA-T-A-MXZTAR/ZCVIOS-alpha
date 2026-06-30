@@ -47,6 +47,16 @@ function desktopValue(content, key) {
   return match[1].trim();
 }
 
+async function assertDirectory(dirPath, label) {
+  let s;
+  try {
+    s = await stat(dirPath);
+  } catch {
+    assert.fail(`${label} directory not found: ${dirPath}`);
+  }
+  assert.ok(s.isDirectory(), `${label} path is not a directory: ${dirPath}`);
+}
+
 async function verifyDesktopEntries(paths, packageLabel) {
   assert.ok(paths.length >= 1, `${packageLabel} must contain a desktop entry`);
 
@@ -73,10 +83,12 @@ async function verifyDesktopEntries(paths, packageLabel) {
   }
 }
 
+await assertDirectory(join(bundleRoot, "deb"), "Debian bundle output");
 const debFiles = await collectFiles(
   join(bundleRoot, "deb"),
   (path) => path.endsWith(".deb"),
 );
+await assertDirectory(join(bundleRoot, "appimage"), "AppImage bundle output");
 const appImages = await collectFiles(
   join(bundleRoot, "appimage"),
   (path) => path.endsWith(".AppImage"),
@@ -95,8 +107,18 @@ assert.ok(appImageStats.size > 100_000, "AppImage package is unexpectedly small"
 const debPackage = command("dpkg-deb", ["--field", debPath, "Package"]);
 const debVersion = command("dpkg-deb", ["--field", debPath, "Version"]);
 const debArchitecture = command("dpkg-deb", ["--field", debPath, "Architecture"]);
+const desktopPkg = JSON.parse(await readFile("desktop/package.json", "utf8"));
+const expectedVersion = desktopPkg.version;
+assert.ok(
+  typeof expectedVersion === "string" && expectedVersion.length > 0,
+  "desktop/package.json must declare a non-empty version",
+);
 assert.equal(debPackage, "zcvios-desktop");
-assert.equal(debVersion, "0.1.0");
+assert.equal(
+  debVersion,
+  expectedVersion,
+  `Debian package version mismatch: expected ${expectedVersion}, got ${debVersion}`,
+);
 assert.ok(debArchitecture.length > 0);
 
 const debExtractRoot = await mkdtemp(join(tmpdir(), "zcvios-deb-inspect-"));

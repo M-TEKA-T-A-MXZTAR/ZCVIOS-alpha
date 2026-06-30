@@ -95,11 +95,49 @@ assert.match(packageWorkflow, /test-linux-package-persistence\.sh/);
 assert.match(packageWorkflow, /dpkg-deb/);
 assert.match(packageWorkflow, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/);
 assert.match(packageWorkflow, /retention-days: 3/);
-assert.match(packageWorkflow, /permissions:\n  contents: read/);
+assert.match(
+  packageWorkflow,
+  /\bcontents\s*:\s*read\b/,
+  "Package workflow must declare contents: read",
+);
+assert.doesNotMatch(
+  packageWorkflow,
+  /^\s*[\w-]+\s*:\s*write\s*$/m,
+  "Package workflow must not grant write permissions to any scope",
+);
 
+function workflowEventPresent(yaml, event) {
+  const e = event.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (new RegExp(`^on:\\s*\\n(?:[ \\t]+[^\\n]*\\n)*[ \\t]+${e}\\s*:`, "m").test(yaml)) return true;
+  if (new RegExp(`^${e}\\s*:`, "m").test(yaml)) return true;
+  if (new RegExp(`\\bon\\s*:\\s*\\[[^\\]]*\\b${e}\\b`).test(yaml)) return true;
+  if (new RegExp(`\\bon\\s*:\\s*\\{(?:[^{}]|\\{[^}]*\\})*\\b${e}\\s*:`).test(yaml)) return true;
+  return false;
+}
+
+{
+  const blockForm = "on:\n  push:\n    branches: [main]\n";
+  assert.equal(workflowEventPresent(blockForm, "push"), true, "event detector: block form push");
+  assert.equal(workflowEventPresent(blockForm, "release"), false, "event detector: block form no release");
+  const flowSeqForm = "on: [pull_request, push]\n";
+  assert.equal(workflowEventPresent(flowSeqForm, "push"), true, "event detector: flow-seq push");
+  assert.equal(workflowEventPresent(flowSeqForm, "release"), false, "event detector: flow-seq no release");
+  const flowMapForm = "on: { pull_request: {}, push: {} }\n";
+  assert.equal(workflowEventPresent(flowMapForm, "push"), true, "event detector: flow-map push");
+  assert.equal(workflowEventPresent(flowMapForm, "release"), false, "event detector: flow-map no release");
+  const releaseBlockForm = "on:\n  release:\n    types: [published]\n";
+  assert.equal(workflowEventPresent(releaseBlockForm, "release"), true, "event detector: block form release");
+  assert.equal(workflowEventPresent(releaseBlockForm, "push"), false, "event detector: block form no push");
+}
+
+for (const event of ["push", "release"]) {
+  assert.equal(
+    workflowEventPresent(packageWorkflow, event),
+    false,
+    `Package smoke workflow must not contain ${event} trigger`,
+  );
+}
 for (const forbidden of [
-  "push:",
-  "release:",
   "contents: write",
   "id-token: write",
   "gh release",

@@ -2,13 +2,20 @@
 set -euo pipefail
 
 bundle_root="${1:-desktop/src-tauri/target/release/bundle}"
-appimage="$(find "$bundle_root/appimage" -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
-deb="$(find "$bundle_root/deb" -maxdepth 1 -type f -name '*.deb' -print -quit)"
+mapfile -t appimage_list < <(find "$bundle_root/appimage" -maxdepth 1 -type f -name '*.AppImage' | sort)
+mapfile -t deb_list < <(find "$bundle_root/deb" -maxdepth 1 -type f -name '*.deb' | sort)
 
-if [[ -z "$appimage" || -z "$deb" ]]; then
-  echo "Expected one AppImage and one Debian package under $bundle_root" >&2
+if [[ "${#appimage_list[@]}" -ne 1 ]]; then
+  echo "Expected exactly one AppImage under $bundle_root/appimage, found ${#appimage_list[@]}" >&2
   exit 1
 fi
+if [[ "${#deb_list[@]}" -ne 1 ]]; then
+  echo "Expected exactly one Debian package under $bundle_root/deb, found ${#deb_list[@]}" >&2
+  exit 1
+fi
+
+appimage="${appimage_list[0]}"
+deb="${deb_list[0]}"
 
 run_gui_smoke() {
   local log_path="$1"
