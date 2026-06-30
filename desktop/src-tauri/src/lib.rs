@@ -12,11 +12,12 @@ fn open_data_folder(app: tauri::AppHandle) -> Result<String, String> {
     fs::create_dir_all(&data_dir)
         .map_err(|error| format!("Could not create the application-data directory: {error}"))?;
 
+    let data_dir_display = data_dir.to_string_lossy().into_owned();
     app.opener()
-        .open_path(data_dir.clone(), None::<&str>)
+        .open_path(data_dir_display.clone(), None::<&str>)
         .map_err(|error| format!("Could not open the application-data directory: {error}"))?;
 
-    Ok(data_dir.to_string_lossy().into_owned())
+    Ok(data_dir_display)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
