@@ -4,16 +4,30 @@ use std::fs;
 use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
 
-use persistence::{database_path, DesktopBootstrapStatus};
+use persistence::{
+    database_path, DesktopBootstrapStatus, OperatorBaselineInput,
+};
 
-#[tauri::command]
-fn initialize_local_profile(app: tauri::AppHandle) -> Result<DesktopBootstrapStatus, String> {
+fn resolve_database_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let data_directory = app
         .path()
         .app_data_dir()
         .map_err(|error| format!("Could not resolve the application-data directory: {error}"))?;
 
-    persistence::bootstrap_database(&database_path(&data_directory))
+    Ok(database_path(&data_directory))
+}
+
+#[tauri::command]
+fn initialize_local_profile(app: tauri::AppHandle) -> Result<DesktopBootstrapStatus, String> {
+    persistence::bootstrap_database(&resolve_database_path(&app)?)
+}
+
+#[tauri::command]
+fn save_operator_baseline(
+    app: tauri::AppHandle,
+    input: OperatorBaselineInput,
+) -> Result<DesktopBootstrapStatus, String> {
+    persistence::save_operator_baseline(&resolve_database_path(&app)?, input)
 }
 
 #[tauri::command]
@@ -40,6 +54,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             initialize_local_profile,
+            save_operator_baseline,
             open_data_folder
         ])
         .run(tauri::generate_context!())
