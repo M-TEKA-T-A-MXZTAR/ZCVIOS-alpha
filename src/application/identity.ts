@@ -11,5 +11,7 @@ export interface ActiveProfileProvider {
   getActiveProfile(): Promise<ActiveProfile | null>;
 }
 
-export const resolveActiveProfile = (provider: ActiveProfileProvider) =>
-  provider.getActiveProfile();
+/** Resolve the current owner profile without exposing the delivery-specific identity mechanism. */
+export const resolveActiveProfile = (
+  provider: ActiveProfileProvider,
+): Promise<ActiveProfile | null> => provider.getActiveProfile();
