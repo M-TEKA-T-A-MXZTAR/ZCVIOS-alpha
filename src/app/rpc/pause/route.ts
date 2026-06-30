@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { startOfDay } from "@/lib/time";
 import { unauthorized } from "@/lib/http";
 
@@ -21,13 +21,13 @@ const schema = z
   );
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   const now = startOfDay();
   const activePause = await prisma.pauseWindow.findFirst({
     where: {
-      userId: session.user.id,
+      userId: profile.id,
       isActive: true,
       endDate: { gte: now },
     },
@@ -41,8 +41,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   try {
     const body = await req.json();
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     if (input.mode === "resume") {
       await prisma.pauseWindow.updateMany({
-        where: { userId: session.user.id, isActive: true },
+        where: { userId: profile.id, isActive: true },
         data: { isActive: false, endDate: now },
       });
       return NextResponse.json({ ok: true, pauseUntil: null });
@@ -68,13 +68,13 @@ export async function POST(req: Request) {
     }
 
     await prisma.pauseWindow.updateMany({
-      where: { userId: session.user.id, isActive: true },
+      where: { userId: profile.id, isActive: true },
       data: { isActive: false },
     });
 
     const pause = await prisma.pauseWindow.create({
       data: {
-        userId: session.user.id,
+        userId: profile.id,
         startDate: now,
         endDate,
         isActive: true,
