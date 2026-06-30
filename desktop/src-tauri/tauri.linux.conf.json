@@ -5,6 +5,8 @@
     "enableGTKAppId": true
   },
   "bundle": {
+    "active": true,
+    "useLocalToolsDir": true,
     "targets": ["deb", "appimage"],
     "category": "Productivity",
     "publisher": "MXZTAR",
