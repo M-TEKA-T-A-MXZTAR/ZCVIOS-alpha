@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { unauthorized } from "@/lib/http";
 
@@ -19,10 +19,10 @@ const schema = z.object({
 });
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await prisma.user.findUnique({ where: { id: profile.id } });
   if (!user) return unauthorized();
 
   return NextResponse.json({
@@ -41,15 +41,15 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   try {
     const body = await req.json();
     const input = schema.parse(body);
 
     const user = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: profile.id },
       data: {
         businessUrl: input.businessUrl || null,
         socialLinks: input.socialLinks?.join(",") || null,
@@ -72,11 +72,11 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: profile.id },
     data: {
       businessUrl: null,
       socialLinks: null,
