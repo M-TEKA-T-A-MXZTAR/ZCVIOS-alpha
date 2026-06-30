@@ -77,8 +77,13 @@ const localProfileSource = await readFile(
   "utf8",
 );
 assert.match(localProfileSource, /LOCAL_OWNER_PROFILE_ID = "local-owner"/);
-assert.match(localProfileSource, /source: "local-profile"/);
 assert.match(localProfileSource, /ActiveProfileProvider/);
+assert.match(localProfileSource, /initialize_local_profile/);
+assert.equal(
+  localProfileSource.includes('source: "local-profile"'),
+  false,
+  "Desktop profile identity must come from the persistence adapter rather than a hard-coded stub",
+);
 
 const appSource = await readFile("desktop/src/App.tsx", "utf8");
 assert.match(appSource, /localProfileProvider/);
