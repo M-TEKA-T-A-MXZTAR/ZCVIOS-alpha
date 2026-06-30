@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { decryptApiKey } from "@/lib/crypto";
 import { getOrCreateDailyMission } from "@/lib/engine";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { endOfWeekMonday, startOfWeekMonday } from "@/lib/time";
 import { unauthorized } from "@/lib/http";
 
@@ -44,13 +44,13 @@ const getMeta = async (userId: string) => {
 };
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await prisma.user.findUnique({ where: { id: profile.id } });
   const apiKey = user?.openAiApiKeyEncrypted ? decryptApiKey(user.openAiApiKeyEncrypted) : null;
-  const result = await getOrCreateDailyMission({ userId: session.user.id, apiKey });
-  const meta = await getMeta(session.user.id);
+  const result = await getOrCreateDailyMission({ userId: profile.id, apiKey });
+  const meta = await getMeta(profile.id);
 
   return NextResponse.json({
     ...result,
@@ -59,13 +59,13 @@ export async function GET() {
 }
 
 export async function POST() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await prisma.user.findUnique({ where: { id: profile.id } });
   const apiKey = user?.openAiApiKeyEncrypted ? decryptApiKey(user.openAiApiKeyEncrypted) : null;
   const result = await getOrCreateDailyMission({
-    userId: session.user.id,
+    userId: profile.id,
     apiKey,
     forceRegenerate: true,
   });
