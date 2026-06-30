@@ -33,6 +33,33 @@ ZC-VIOS is intended as a user-controlled planning workspace. It does not collect
 5. **Retention** - Improving repeat value, follow-up quality, and long-term customer usefulness
 6. **Automation** - Reducing time spent on recurring tasks while keeping the user in control
 
+## Planned AI Runtime
+
+The desktop AI runtime is planned for a later milestone after deterministic parity. It is not part of the current desktop implementation.
+
+The provider-neutral design will support:
+
+| Mode | Role | Network requirement |
+|---|---|---|
+| **Off / deterministic** | Authoritative calculations, template missions, reports, and fallback | None |
+| **Local Ollama** | Optional private explanations, rewriting, and summaries | Loopback-only local API by default |
+| **Gemini API** | Optional cloud assistance using a user-owned key | Explicit cloud request |
+| **OpenAI API** | Optional cloud assistance using a user-owned key | Explicit cloud request |
+
+The recommended approach is to bundle the integration contract and guided setup, not the Ollama application or model weights. Users install Ollama separately and choose a model suitable for their hardware. The first practical local text-model baseline under consideration is `llama3.2:3b`, with a smaller fallback for low-resource systems.
+
+AI may explain or reword deterministic results, but it may not become authoritative for revenue calculations, persistence, permissions, publishing, spending, or account access.
+
+Cloud keys must use secure desktop secret storage rather than the SQLite business database, source code, logs, or exports.
+
+See [Local-First AI Runtime Plan](LOCAL_AI_RUNTIME.md).
+
+## Rendering Boundary
+
+ZCVIOS AI assistance is a text decision-support capability. Image generation, mockup creation, pattern rendering, vector generation, and related production engines are separate modules.
+
+Windows and macOS rendering support must be verified independently. Rendering uncertainty must not block the local planning core or the platform-neutral text-provider interface.
+
 ## Next.js App Structure
 
 ```text
@@ -58,3 +85,4 @@ src/app/
     ├── logs/               # Work log CRUD
     ├── lever-override/     # Manual lever selection
     └── reports/            # Report data endpoints
+```

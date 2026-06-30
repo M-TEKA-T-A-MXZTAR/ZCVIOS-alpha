@@ -1,6 +1,6 @@
 # ZC-VIOS Core v1.1.1-alpha
 
-## ## Privacy-First Creator Workflow and Planning Workspace
+## Privacy-First Creator Workflow and Planning Workspace
 
 Open-source planning and measurement workspace designed to help solo creators structure design-to-commerce operations.
 
@@ -15,6 +15,27 @@ ZC-VIOS is designed as a user-controlled planning tool.
 It does not collect passwords, payment credentials, recovery codes, private platform tokens, or private account data. Core functionality works locally with deterministic logic. External AI features are optional, user-configured, and not required for basic operation.
 
 Any public-page review or storefront analysis should be user-initiated and limited to information the user is authorized to provide or publicly visible information.
+
+## AI runtime direction
+
+The desktop AI runtime is **planned, not implemented**.
+
+ZC-VIOS will continue to work with AI disabled. The planned provider order is:
+
+1. deterministic mode — default and always available
+2. local Ollama — preferred optional path with no per-request cloud API charge
+3. Gemini API — optional bring-your-own-key provider
+4. OpenAI API — optional bring-your-own-key provider
+
+ZC-VIOS should bake in provider detection, safety controls, and guided setup rather than bundling Ollama binaries or model weights inside the application installer. Users will deliberately install Ollama and select a model appropriate for their hardware. No model should be downloaded silently.
+
+A practical initial local text-model baseline is `llama3.2:3b`, with a smaller model available for lower-resource systems. The final implementation must detect available resources and installed models instead of assuming one machine profile.
+
+Cloud API keys must not be stored in the SQLite business database, frontend bundle, logs, or exports. API access and billing remain separate from ordinary ChatGPT or Google account subscriptions.
+
+See [Local-First AI Runtime Plan](docs/LOCAL_AI_RUNTIME.md) for provider, installation, privacy, resource-governor, and cross-platform requirements.
+
+The AI plan covers text decision support. Visual rendering, image generation, mockups, patterns, and vector workflows remain separate modules with their own hardware and Windows/macOS compatibility gates.
 
 ## Architecture
 
@@ -47,31 +68,37 @@ src/app/
 ## Local setup
 
 1. Install dependencies
+
 ```bash
 npm install
 ```
 
 2. Create local environment file
+
 ```bash
 cp .env.example .env.local
 ```
 
 3. Generate Prisma client
+
 ```bash
 npx prisma generate
 ```
 
 4. Run database migrations
+
 ```bash
 npx prisma migrate deploy
 ```
 
 5. Seed demo data
+
 ```bash
 npm run seed
 ```
 
 6. Start development server
+
 ```bash
 npm run dev
 ```
@@ -79,6 +106,7 @@ npm run dev
 Open: `http://localhost:3000`
 
 **Demo account:**
+
 - Email: `demo@zcvios.local`
 - Password: `DemoPass123!`
 
@@ -93,8 +121,12 @@ NEXTAUTH_URL=http://localhost:3000
 ```
 
 **Notes:**
-- Deterministic mode works without OpenAI key
-- OpenAI is optional (BYO key per user in Settings)
+
+- Deterministic mode works without any AI key.
+- The current browser implementation may expose optional provider configuration, but the desktop local-AI adapter is not implemented yet.
+- Future Gemini and OpenAI support will require user-owned API credentials and explicit cloud-data consent.
+- A ChatGPT subscription does not provide OpenAI API usage.
+- Local Ollama will require a separate user-controlled Ollama installation and model download.
 
 ## Verification
 
@@ -116,6 +148,7 @@ The GitHub Actions workflow runs two jobs:
 - [System Overview](docs/SYSTEM_OVERVIEW.md) - Architecture, components, and engine concepts
 - [Product Thesis](docs/PRODUCT_THESIS.md) - Core user, problem, and promise
 - [Architecture Principles](docs/ARCHITECTURE_PRINCIPLES.md) - Design principles for development
+- [Local-First AI Runtime Plan](docs/LOCAL_AI_RUNTIME.md) - Planned Ollama, Gemini, and OpenAI provider boundaries
 - [ZC-VIOS Lore](docs/ZCVIOS_LORE.md) - Vision and philosophy behind the system
 - [ZCcode Language](docs/ZCCODE_LANGUAGE.md) - Structured prompting language for system design
 - [Roadmap](docs/ROADMAP.md) - Current status and future direction
