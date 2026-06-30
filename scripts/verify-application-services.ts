@@ -31,24 +31,31 @@ let missionContext: MissionContextSnapshot = {
   lastLeverLogDate: new Date(2026, 5, 29),
   existingMission,
 };
-let includeExistingMission = false;
-let savedMission: MissionRecord | null = null;
-let generatorCalls = 0;
+
+const missionState: {
+  includeExistingMission: boolean;
+  savedMission: MissionRecord | null;
+  generatorCalls: number;
+} = {
+  includeExistingMission: false,
+  savedMission: null,
+  generatorCalls: 0,
+};
 
 const missionRepository: MissionRepository = {
   getMissionContext: async (query) => {
-    includeExistingMission = query.includeExistingMission;
+    missionState.includeExistingMission = query.includeExistingMission;
     return missionContext;
   },
   saveMission: async ({ mission }) => {
-    savedMission = mission;
+    missionState.savedMission = mission;
     return mission;
   },
 };
 
 const missionGenerator: MissionGenerator = {
   generate: async ({ lever, context }) => {
-    generatorCalls += 1;
+    missionState.generatorCalls += 1;
     assert.equal(lever, "Distribution");
     assert.equal(context, "Business type: digital. Weekly lever: Distribution.");
     return {
@@ -75,11 +82,11 @@ const run = async () => {
     today,
     weekStart,
   });
-  assert.equal(includeExistingMission, true);
+  assert.equal(missionState.includeExistingMission, true);
   assert.equal(existingResult.mission.primaryTask, "Publish one offer.");
   assert.equal(existingResult.inactivityLevel, 1);
-  assert.equal(savedMission, null);
-  assert.equal(generatorCalls, 0);
+  assert.equal(missionState.savedMission, null);
+  assert.equal(missionState.generatorCalls, 0);
 
   missionContext = {
     ...missionContext,
@@ -93,10 +100,12 @@ const run = async () => {
     weekStart,
   });
   assert.equal(resetResult.mission.source, "RESET");
-  assert.equal(savedMission?.source, "RESET");
-  assert.equal(generatorCalls, 0);
+  const resetSavedMission = missionState.savedMission;
+  assert.ok(resetSavedMission);
+  assert.equal(resetSavedMission.source, "RESET");
+  assert.equal(missionState.generatorCalls, 0);
 
-  savedMission = null;
+  missionState.savedMission = null;
   missionContext = {
     ...missionContext,
     existingMission,
@@ -109,21 +118,25 @@ const run = async () => {
     weekStart,
     forceRegenerate: true,
   });
-  assert.equal(includeExistingMission, false);
+  assert.equal(missionState.includeExistingMission, false);
   assert.equal(generatedResult.mission.primaryTask, "Publish an AI-assisted offer.");
   assert.equal(generatedResult.mission.canUseAi, true);
-  assert.equal(savedMission?.source, "AI");
-  assert.equal(generatorCalls, 1);
+  const generatedSavedMission = missionState.savedMission;
+  assert.ok(generatedSavedMission);
+  assert.equal(generatedSavedMission.source, "AI");
+  assert.equal(missionState.generatorCalls, 1);
 
   const firstWeek = new Date(2026, 5, 1);
   const secondWeek = new Date(2026, 5, 8);
-  let weeklyQuery:
-    | { historyStart: Date; weekStart: Date; weekEnd: Date }
-    | null = null;
+  const reportState: {
+    weeklyQuery: { historyStart: Date; weekStart: Date; weekEnd: Date } | null;
+  } = {
+    weeklyQuery: null,
+  };
 
   const reportRepository: ReportRepository = {
     getWeeklyReportSnapshot: async (query) => {
-      weeklyQuery = query;
+      reportState.weeklyQuery = query;
       return {
         revenues: [
           { weekStart: firstWeek, revenueCents: 6000 },
@@ -160,8 +173,10 @@ const run = async () => {
   assert.equal(weeklyReport.revenue, 120);
   assert.equal(weeklyReport.leverEhr, 60);
   assert.equal(weeklyReport.fullLoggingEnabled, true);
-  assert.equal(weeklyQuery?.historyStart.getTime(), new Date(2026, 4, 18).getTime());
-  assert.equal(weeklyQuery?.weekEnd.getHours(), 23);
+  const weeklyQuery = reportState.weeklyQuery;
+  assert.ok(weeklyQuery);
+  assert.equal(weeklyQuery.historyStart.getTime(), new Date(2026, 4, 18).getTime());
+  assert.equal(weeklyQuery.weekEnd.getHours(), 23);
 
   const monthlyReport = await reportService.buildMonthlyReport({
     userId: "local-user",
