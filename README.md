@@ -92,7 +92,7 @@ cp .env.example .env.local
 3. Generate Prisma client
 
 ```bash
-npx prisma generate
+npm run prisma:generate
 ```
 
 4. Run database migrations
@@ -141,17 +141,23 @@ NEXTAUTH_URL=http://localhost:3000
 ## Verification
 
 ```bash
-npm run lint      # ESLint
-npm run build     # Production build
-npm run test      # Integration tests (requires app running)
+npm run verify:repository-hygiene  # Ignore rules and tracked generated files
+npm run test:core                  # Deterministic and architecture checks
+npm run lint                       # ESLint
+npm run build                      # Production build
+npm test                           # Integration tests against a running test app
 ```
+
+Integration tests must use a disposable SQLite database, not `dev.db`. Start the test application with an explicit test `DATABASE_URL`, and run pytest with `ZCVIOS_TEST_DATABASE_PATH` pointing to that same database file. The corrupted-key regression test refuses to modify the repository development database.
+
+The `npm test` launcher discovers Python 3 through the optional `PYTHON` environment variable or common Linux, macOS, and Windows commands.
 
 ## CI workflow
 
 The GitHub Actions workflow runs two jobs:
 
-1. **Build & Verify** - Install, migrate, seed, lint, build
-2. **Integration Tests** - Python pytest suite against running app (requires Build to pass)
+1. **Build & Verify** - Install, verify repository/core boundaries, migrate, seed, lint, and build against an isolated CI database
+2. **Integration Tests** - Build and run the application against a separate disposable database, then execute the portable `npm test` command
 
 ## Documentation
 
