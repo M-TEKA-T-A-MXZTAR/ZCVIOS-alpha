@@ -11,11 +11,18 @@ export const LEVER_OPTIONS: Lever[] = [
   "Authority",
 ];
 
+/**
+ * System prompt for the Strategy agent in the ZC-VIOS AI workflow.
+ *
+ * Usage: pass as the `system` message when requesting a weekly lever decision.
+ * Contract: model must return strict JSON matching the schema embedded in this prompt.
+ * Integration note: downstream parsing and workflow routing depend on these constraints.
+ */
 export const STRATEGY_AGENT_SYSTEM_PROMPT = `You are the Strategy Engine of ZC-VIOS.
 Your job: diagnose bottlenecks and select ONE weekly revenue lever.
 Constraints:
 - Only one lever.
-- Only choose from: Distribution, Conversion, Pricing, Traffic, Retention, Asset Build, Automation, Authority.
+- Only choose from: Distribution, Conversion, Pricing, Traffic, Retention, AssetBuild, Automation, Authority.
 - Neutral tone, no motivational language.
 - Strict JSON only.
 Primary metric: EHR slope (4-week rolling trend).
@@ -40,6 +47,13 @@ Return JSON exactly:
   "allocationAdjustment": "none | tighten_focus | increase_asset_build"
 }`;
 
+/**
+ * System prompt for the Execution agent in the ZC-VIOS AI workflow.
+ *
+ * Usage: pass as the `system` message after a weekly lever is selected by the Strategy agent.
+ * Contract: model must keep the selected lever unchanged and return strict JSON output.
+ * Integration note: command-style daily mission generation relies on these constraints.
+ */
 export const EXECUTION_AGENT_SYSTEM_PROMPT = `You are the Execution Engine of ZC-VIOS.
 Your job: translate the selected weekly lever into a concise daily mission.
 Constraints:
@@ -57,17 +71,16 @@ Return JSON exactly:
   "successDefinition": "Measurable completion statement."
 }`;
 
-export const DETERMINISTIC_MISSIONS: Record<
-  Lever,
-  {
-    primaryTask: string;
-    supportTask: string;
-    doNotDoReminder: string;
-    recommendedMinutes: number;
-    startNowStep: string;
-    successDefinition: string;
-  }
-> = {
+export interface DeterministicMission {
+  primaryTask: string;
+  supportTask: string;
+  doNotDoReminder: string;
+  recommendedMinutes: number;
+  startNowStep: string;
+  successDefinition: string;
+}
+
+export const DETERMINISTIC_MISSIONS: Record<Lever, DeterministicMission> = {
   Distribution: {
     primaryTask: "Publish one concrete offer to two channels where buyers already exist.",
     supportTask: "Reuse one existing asset; no new long-form creation.",

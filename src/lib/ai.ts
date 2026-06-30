@@ -37,7 +37,7 @@ const strategySchema = z.object({
     "Pricing",
     "Traffic",
     "Retention",
-    "Asset Build",
+    "AssetBuild",
     "Automation",
     "Authority",
   ]),
@@ -138,7 +138,7 @@ export const strategyFallback = (input: StrategyInput) => {
   return {
     selectedLever,
     reasoningSummary:
-      `Weekly lever selected using deterministic rules from progress trend, execution consistency, and weekly workflow signals. ${heuristicNote} Focus remains constrained to one lever for the week.`,
+      `Weekly lever selected using deterministic rules from EHR slope, execution consistency, drift ratio, and weekly operating signals. ${heuristicNote} Focus remains constrained to one lever for the week.`,
     growthStatus,
     executionStatus,
     driftStatus,
