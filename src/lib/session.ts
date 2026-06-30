@@ -1,10 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { browserProfileProvider } from "@/adapters/browser/active-profile-provider";
+import { resolveActiveProfile } from "@/application/identity";
 
-export const requireSession = async () => {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return null;
-  }
-  return session;
-};
+export const requireActiveProfile = () =>
+  resolveActiveProfile(browserProfileProvider);
