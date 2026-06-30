@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { LogCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { startOfDay } from "@/lib/time";
 import { unauthorized } from "@/lib/http";
 
@@ -15,11 +15,11 @@ const schema = z.object({
 });
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   const logs = await prisma.workLogSession.findMany({
-    where: { userId: session.user.id },
+    where: { userId: profile.id },
     orderBy: { date: "desc" },
     take: 100,
   });
@@ -37,11 +37,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   try {
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    const user = await prisma.user.findUnique({ where: { id: profile.id } });
     const body = await req.json();
     const input = schema.parse(body);
     const date = startOfDay(new Date(input.date));
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 
     const entry = await prisma.workLogSession.create({
       data: {
-        userId: session.user.id,
+        userId: profile.id,
         date,
         minutes: input.minutes,
         category: input.category,
