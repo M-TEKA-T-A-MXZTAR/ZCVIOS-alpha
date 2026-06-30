@@ -37,15 +37,16 @@ The ledger is append-only in meaning:
 | Field | Value |
 |---|---|
 | Audited main | `bbf8c002dd9d63c5cbdd5c20786898409c012e8b` |
-| Latest merged baseline PR | #67 |
-| Active planning-control PR | #68 — draft |
+| Latest merged milestone PR | #68 |
+| Current main merge commit | `438a82a48490651d5d4e7f7e54039e81b72c6d7e` |
+| Active reliability PR | #69 — draft |
 | Browser runtime | Operational alpha; reliability repair required |
 | Desktop runtime | M8.1 operator baseline implemented; parity incomplete |
 | Linux packaging | Debian/AppImage test-build capability |
 | Windows packaging | Planned |
 | macOS packaging | Planned |
 | Desktop AI | Planned; no provider runtime implemented |
-| Active critical path | Phase 0 governance and reliability reset |
+| Active critical path | P0.2 repository hygiene and reproducible verification |
 | Supported public release | None |
 
 ## Historical milestone register
@@ -65,6 +66,7 @@ The ledger is append-only in meaning:
 | #65 | Local-first AI direction | Defined deterministic/Ollama/Gemini/OpenAI architecture | Merged / Planned architecture |
 | #66 | Three-platform requirements | Defined Linux, Windows, and macOS product gates | Merged / Planned architecture |
 | #67 | Unreadable AI-key resilience | Optional-key failure now falls back to deterministic operation | Merged; CI passed |
+| #68 | Master build plan and progress ledger | Added audit, authoritative build order, ledger, and README links | Merged / P0.1 complete |
 
 ## PR #67 evidence record
 
@@ -113,15 +115,15 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | AUD-008 | P2 | Unusable saved AI key lacks health state | Proposed | P0.5 |
 | AUD-009 | P2 | Browser AI is provider-specific | Deferred | Phase 4 |
 | AUD-010 | P1 | Documents say six levers; code defines eight | Decision required | P0.7 |
-| AUD-011 | P1 | Multiple plans claim authority | Active | P0.1 |
-| AUD-012 | P1 | Browser/desktop authority is unclear | Active | P0.1/P0.7 |
+| AUD-011 | P1 | Multiple plans claim authority | Resolved by PR #68 | P0.1 |
+| AUD-012 | P1 | Browser/desktop authority is unclear | Partially resolved by PR #68 | P0.1/P0.7 |
 | AUD-013 | P2 | Product/package versions conflict | Proposed | P0.7 |
-| AUD-014 | P1 | Root tests use a machine-specific Python path | Proposed | P0.2 |
-| AUD-015 | P1 | Ignore rules malformed; bytecode tracked | Proposed | P0.2 |
-| AUD-016 | P1 | Regression test mutates shared `dev.db` | Proposed | P0.2 |
-| AUD-017 | P2 | Root CI policy is costly and inconsistent | Proposed | P0.2 |
+| AUD-014 | P1 | Root tests use a machine-specific Python path | Active in PR #69 | P0.2 |
+| AUD-015 | P1 | Ignore rules malformed; bytecode tracked | Active in PR #69 | P0.2 |
+| AUD-016 | P1 | Regression test mutates shared `dev.db` | Active in PR #69 | P0.2 |
+| AUD-017 | P2 | Root CI policy is costly and inconsistent | Proposed follow-up | P0.2 |
 | AUD-018 | P2 | Toolchain and Prisma versions drift | Proposed | P0.2/P0.7 |
-| AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Proposed | P0.2 |
+| AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Proposed follow-up | P0.2 |
 | AUD-020 | P1 | Currency and locale are not authoritative data | Decision required | P0.4 |
 | AUD-021 | P2 | Work logs are not full CRUD | Proposed | P0.7/P1.3 |
 | AUD-022 | P2 | Projection language risks predictive claims | Proposed | P0.3 |
@@ -141,14 +143,14 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | DEC-006 | Do not silently bundle/install Ollama or model weights | Approved |
 | DEC-007 | One bounded outcome per PR | Approved |
 | DEC-008 | Do not label a platform Supported without complete native evidence | Approved |
-| DEC-009 | Master plan controls order; progress ledger controls status | Active pending merge |
+| DEC-009 | Master plan controls order; progress ledger controls status | Approved by merged PR #68 |
 
 ## Active queue
 
 | Order | Work item | Status | Exit condition |
 |---:|---|---|---|
-| 1 | P0.1 planning controls | Active | Audit, plan, ledger linked and merged |
-| 2 | P0.2 repository hygiene | Blocked by P0.1 | Portable tests, isolated DB, clean generated-file state |
+| 1 | P0.1 planning controls | Merged / complete | Audit, plan, ledger linked and merged |
+| 2 | P0.2 repository hygiene | Active — PR #69 first slice | Portable tests, isolated DB, clean generated-file state |
 | 3 | P0.3 metric correctness | Blocked by P0.2 | Zero/missing/focused metric fixtures pass |
 | 4 | P0.4 date/currency contracts | Blocked by P0.3 decisions | Date/time-zone/currency fixtures pass |
 | 5 | P0.5 route atomicity/errors | Blocked | Partial-failure and typed-error tests pass |
@@ -195,6 +197,28 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 - **Status after:** Active / draft review
 - **Unresolved risk:** Documentation requires review; no runtime defect is fixed by this PR
 - **Next allowed action:** Inspect PR checks and review comments once, then repair documentation findings only
+
+### LED-2026-07-01-006 — Planning controls merged
+
+- **Milestone:** P0.1
+- **Status before:** PR #68 active
+- **Change:** PR #68 merged
+- **PR / commit:** #68 / `438a82a48490651d5d4e7f7e54039e81b72c6d7e`
+- **Verification performed:** GitHub merge state confirmed; four-document scope retained
+- **Status after:** P0.1 Merged / complete
+- **Unresolved risk:** Planning documents describe, but do not themselves fix, runtime defects
+- **Next allowed action:** Begin P0.2 repository hygiene and reproducible verification
+
+### LED-2026-07-01-007 — Repository hygiene slice opened
+
+- **Milestone / audit IDs:** P0.2; AUD-014, AUD-015, AUD-016
+- **Status before:** P0.2 blocked by planning controls
+- **Change:** Opened draft PR #69, `Repair repository hygiene and isolate integration tests`
+- **PR / branch:** #69 / `fix/repository-hygiene-portable-tests`
+- **Verification requested:** repository hygiene verifier, deterministic checks, isolated Prisma migration/seed/build, portable `npm test`, dependency review
+- **Status after:** P0.2 Active — first bounded slice
+- **Unresolved risk:** Offline font build, CI cost policy, and toolchain alignment remain separate P0.2 follow-ups
+- **Next allowed action:** Inspect PR #69 checks and review findings; fix only this slice before merge
 
 ## Entry template
 
