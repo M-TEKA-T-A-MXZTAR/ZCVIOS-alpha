@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { decryptApiKey } from "@/lib/crypto";
+import { decryptApiKeyOrNull } from "@/lib/crypto";
 import { getOrCreateDailyMission } from "@/lib/engine";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProfile } from "@/lib/session";
@@ -48,7 +48,7 @@ export async function GET() {
   if (!profile) return unauthorized();
 
   const user = await prisma.user.findUnique({ where: { id: profile.id } });
-  const apiKey = user?.openAiApiKeyEncrypted ? decryptApiKey(user.openAiApiKeyEncrypted) : null;
+  const apiKey = decryptApiKeyOrNull(user?.openAiApiKeyEncrypted);
   const result = await getOrCreateDailyMission({ userId: profile.id, apiKey });
   const meta = await getMeta(profile.id);
 
@@ -63,7 +63,7 @@ export async function POST() {
   if (!profile) return unauthorized();
 
   const user = await prisma.user.findUnique({ where: { id: profile.id } });
-  const apiKey = user?.openAiApiKeyEncrypted ? decryptApiKey(user.openAiApiKeyEncrypted) : null;
+  const apiKey = decryptApiKeyOrNull(user?.openAiApiKeyEncrypted);
   const result = await getOrCreateDailyMission({
     userId: profile.id,
     apiKey,

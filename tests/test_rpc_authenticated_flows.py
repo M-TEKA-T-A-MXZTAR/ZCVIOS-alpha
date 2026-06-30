@@ -1,9 +1,14 @@
 import os
+import sqlite3
 import time
 from datetime import date, timedelta
+from pathlib import Path
 
 import pytest
 import requests
+
+CORRUPTED_OPENAI_KEY_CIPHERTEXT = "invalid-token-format"
+CORRUPTED_OPENAI_KEY_LAST4 = "9999"
 
 
 @pytest.fixture(scope="session")
@@ -49,6 +54,20 @@ def login_session(base_url: str, email: str, password: str) -> requests.Session:
     return session
 
 
+def _repository_db_path() -> Path:
+    return Path(__file__).resolve().parents[1] / "dev.db"
+
+
+def _set_openai_key_ciphertext(email: str, ciphertext: str | None, last4: str | None):
+    with sqlite3.connect(_repository_db_path()) as connection:
+        cursor = connection.execute(
+            'UPDATE "User" SET "openAiApiKeyEncrypted" = ?, "openAiKeyLast4" = ? WHERE "email" = ?',
+            (ciphertext, last4, email),
+        )
+        connection.commit()
+    assert cursor.rowcount == 1, f"Expected test user {email} to exist before corrupting stored API key"
+
+
 def test_authenticated_session_is_available(base_url: str, auth_client: requests.Session):
     response = auth_client.get(f"{base_url}/auth/session", timeout=20)
     assert response.status_code == 200
@@ -91,6 +110,49 @@ def test_authenticated_revenue_save_with_signals(base_url: str, auth_client: req
     assert data["ok"] is True
     assert "strategy" in data
     assert data["signals"]["trafficSessions"] == 140
+
+
+def test_corrupted_openai_key_falls_back_without_breaking_core_routes(base_url: str):
+    email = f"qa.corrupt-key.{int(time.time())}@zcvios.local"
+    password = "CorruptKeyPass123!"
+
+    register_response = requests.post(
+        f"{base_url}/rpc/register",
+        json={"name": "QA Corrupt Key", "email": email, "password": password},
+        timeout=20,
+    )
+    assert register_response.status_code == 200
+
+    session = login_session(base_url, email, password)
+    _set_openai_key_ciphertext(email, CORRUPTED_OPENAI_KEY_CIPHERTEXT, CORRUPTED_OPENAI_KEY_LAST4)
+
+    mission_response = session.get(f"{base_url}/rpc/mission", timeout=20)
+    assert mission_response.status_code == 200
+    mission_data = mission_response.json()
+    assert "mission" in mission_data
+
+    regenerate_response = session.post(f"{base_url}/rpc/mission", timeout=20)
+    assert regenerate_response.status_code == 200
+    assert "mission" in regenerate_response.json()
+
+    revenue_response = session.post(
+        f"{base_url}/rpc/revenue",
+        json={
+            "weekStart": date.today().isoformat(),
+            "revenue": 3210,
+            "note": "pytest-corrupt-openai-key",
+            "trafficSessions": 90,
+            "leadsGenerated": 10,
+            "closedSales": 3,
+            "churnedCustomers": 0,
+            "grossMarginPct": 42,
+        },
+        timeout=20,
+    )
+    assert revenue_response.status_code == 200
+    revenue_data = revenue_response.json()
+    assert revenue_data["ok"] is True
+    assert revenue_data["signals"]["trafficSessions"] == 90
 
 
 def test_future_dated_log_is_rejected(base_url: str, auth_client: requests.Session):
