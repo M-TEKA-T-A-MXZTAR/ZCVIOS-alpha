@@ -1,0 +1,108 @@
+name: zcvios-linux-package-ci
+
+on:
+  pull_request:
+    paths:
+      - 'desktop/src-tauri/**'
+      - 'desktop/package.json'
+      - 'desktop/package-lock.json'
+      - 'scripts/verify-linux-package-metadata.mjs'
+      - 'scripts/verify-linux-package-artifacts.mjs'
+      - 'scripts/test-linux-package-persistence.sh'
+      - '.github/workflows/desktop-package-ci.yml'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-packages:
+    name: Linux Test Packages
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      - name: Install desktop frontend dependencies
+        run: npm install --prefix desktop --ignore-scripts
+
+      - name: Install Linux packaging dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          if ! sudo apt-get update > /tmp/zcvios-package-apt.log 2>&1; then
+            tail -n 120 /tmp/zcvios-package-apt.log
+            exit 1
+          fi
+          if ! sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libfuse2 \
+            patchelf \
+            xvfb >> /tmp/zcvios-package-apt.log 2>&1; then
+            tail -n 120 /tmp/zcvios-package-apt.log
+            exit 1
+          fi
+          echo "Linux packaging dependencies installed."
+
+      - name: Confirm toolchain
+        run: |
+          node --version
+          npm --version
+          rustc --version
+          cargo --version
+          dpkg-deb --version | head -n 1
+
+      - name: Verify package configuration boundaries
+        run: node scripts/verify-linux-package-metadata.mjs
+
+      - name: Test desktop persistence adapter
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo test --quiet --manifest-path desktop/src-tauri/Cargo.toml
+
+      - name: Build Debian and AppImage test packages
+        env:
+          CARGO_TERM_COLOR: never
+        run: npm run tauri:build --prefix desktop -- --bundles deb,appimage
+
+      - name: Inspect generated package structures
+        run: node scripts/verify-linux-package-artifacts.mjs
+
+      - name: Test packaged launch and data preservation
+        run: bash scripts/test-linux-package-persistence.sh
+
+      - name: Prepare short-lived test artifact
+        run: |
+          artifact_dir="$RUNNER_TEMP/zcvios-linux-test-packages"
+          mkdir -p "$artifact_dir"
+          find desktop/src-tauri/target/release/bundle/deb -maxdepth 1 -type f -name '*.deb' -exec cp {} "$artifact_dir/" \;
+          find desktop/src-tauri/target/release/bundle/appimage -maxdepth 1 -type f -name '*.AppImage' -exec cp {} "$artifact_dir/" \;
+          cp desktop/src-tauri/target/release/bundle/package-verification.json "$artifact_dir/"
+          cp desktop/src-tauri/target/release/bundle/persistence-verification.txt "$artifact_dir/"
+          tar -C "$artifact_dir" -czf "$RUNNER_TEMP/zcvios-linux-test-packages.tar.gz" .
+          sha256sum "$RUNNER_TEMP/zcvios-linux-test-packages.tar.gz" > "$RUNNER_TEMP/zcvios-linux-test-packages.tar.gz.sha256"
+
+      - name: Upload short-lived test packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zcvios-linux-test-packages
+          path: |
+            ${{ runner.temp }}/zcvios-linux-test-packages.tar.gz
+            ${{ runner.temp }}/zcvios-linux-test-packages.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
