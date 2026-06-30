@@ -19,11 +19,11 @@ This matrix prevents the desktop conversion from quietly dropping working ZCVIOS
 
 | Capability | Browser baseline | Desktop status | Planned slice | Desktop parity gate |
 |---|---|---|---|---|
-| Application launch | Runs through Next.js in a browser | Planned | M5 | Opens as a branded desktop window without launching a browser or requiring a listening port |
+| Application launch | Runs through Next.js in a browser | In progress — native Tauri shell, frontend build and headless launch smoke test added; local Ubuntu launch still required | M5 | Opens as a branded desktop window without launching a browser or requiring a listening port |
 | Registration | Email/password registration | Planned replacement | M4/M8 | Replaced by local profile onboarding; no web session required |
-| Login and session | NextAuth email/password session behind an active-profile provider | In progress — delivery-neutral profile contract established; local provider pending | M4 | Active local profile is resolved on startup and survives restart |
+| Login and session | NextAuth email/password session behind an active-profile provider | In progress — desktop local-profile provider stub added; persistence and restart recovery pending | M4 | Active local profile is resolved on startup and survives restart |
 | Onboarding | Authenticated onboarding page | Planned | M8.1 | Profile and business settings validate, save, reload, and survive restart |
-| Dashboard | Authenticated dashboard | Planned | M8.2 | Displays current lever, mission, work time, revenue signal, progress signal, and next action from local data |
+| Dashboard | Authenticated dashboard | In progress — empty native dashboard shell only; business state intentionally disconnected | M8.2 | Displays current lever, mission, work time, revenue signal, progress signal, and next action from local data |
 | Work logging | Work-session CRUD | Planned | M8.3 | Add, validate, display, restart, edit/delete where currently supported, and recalculate dashboard/report state |
 | Revenue entry | Weekly revenue CRUD | Planned | M8.4 | Store integer cents, enforce week scope, reload after restart, and update reports |
 | Weekly lever recommendation | Deterministic logic with optional AI assistance | Planned | M1/M8.5 | Shared fixtures return equivalent lever and explanation in browser and desktop adapters |
@@ -39,8 +39,8 @@ This matrix prevents the desktop conversion from quietly dropping working ZCVIOS
 | Settings | Authenticated settings page | Planned | M8.1/M8.8 | Settings persist locally, reload after restart, and do not expose secrets |
 | Optional AI key/configuration | User-configured optional AI | Deferred until deterministic parity | M8.9 | AI can be disabled; unavailable AI falls back without blocking core operation |
 | Public-page review | Under consideration/optional | Deferred | Post-parity | User-supplied public URL only, explicit action, rate limits, and no hidden account access |
-| Error handling | Next.js error boundary and route errors | Planned | M5 onward | Desktop error boundary, visible failure state, logs, and safe recovery path |
-| Data location visibility | Local SQLite through Prisma | Planned improvement | M6 | Settings shows the application data path and provides an Open Data Folder action |
+| Error handling | Next.js error boundary and route errors | In progress — desktop render error boundary and visible recovery control added | M5 onward | Desktop error boundary, visible failure state, logs, and safe recovery path |
+| Data location visibility | Local SQLite through Prisma | In progress — explicit native Open Data Folder action added; SQLite file pending M6 | M6 | Settings shows the application data path and provides an Open Data Folder action |
 | Backup | Manual export-oriented baseline | Planned | M8.8 | User-initiated backup creates a dated copy without freezing the UI |
 | Upgrade preservation | Not applicable to browser deployment | Planned | M7 | Installing a newer package preserves database and user exports |
 | Uninstall behaviour | Not applicable to browser deployment | Planned | M7 | Program removal does not silently delete user-created data |
@@ -53,7 +53,7 @@ The desktop persistence layer must cover every currently relevant model before p
 
 | Model/domain record | Desktop repository contract | Desktop SQLite adapter | Migration/import verified |
 |---|---:|---:|---:|
-| User / local profile | In progress — active-profile provider contract established | Planned | Planned |
+| User / local profile | In progress — active-profile contract and non-persistent desktop provider stub established | Planned | Planned |
 | WeeklyRevenue | Planned | Planned | Planned |
 | WeeklyPlan | Planned | Planned | Planned |
 | WorkLogSession | Planned | Planned | Planned |
