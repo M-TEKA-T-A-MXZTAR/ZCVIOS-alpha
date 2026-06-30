@@ -1,7 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import type { ActiveProfile } from "../../src/application/identity";
-import { localProfileProvider } from "./adapters/local-profile-provider";
+import {
+  localProfileProvider,
+  type DesktopBootstrapStatus,
+} from "./adapters/local-profile-provider";
 
 type View = "dashboard" | "system";
 type FolderState = {
@@ -14,23 +17,55 @@ const navigation: Array<{ id: View; label: string }> = [
   { id: "system", label: "System" },
 ];
 
+const persistenceErrorMessage = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  return `Could not initialize local persistence: ${message}`;
+};
+
 export function App() {
   const [view, setView] = useState<View>("dashboard");
-  const [profile, setProfile] = useState<ActiveProfile | null>(null);
+  const [bootstrap, setBootstrap] = useState<DesktopBootstrapStatus | null>(null);
+  const [startupError, setStartupError] = useState("");
   const [folderState, setFolderState] = useState<FolderState>({
     status: "idle",
     message: "",
   });
 
+  const profile: ActiveProfile | null = bootstrap?.profile ?? null;
+
   useEffect(() => {
-    let active = true;
-    localProfileProvider.getActiveProfile().then((resolved) => {
-      if (active) setProfile(resolved);
-    });
+    let cancelled = false;
+
+    void localProfileProvider
+      .initialize()
+      .then((result) => {
+        if (!cancelled) {
+          setBootstrap(result);
+          setStartupError("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setBootstrap(null);
+          setStartupError(persistenceErrorMessage(error));
+        }
+      });
+
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, []);
+
+  const retryPersistence = async () => {
+    setStartupError("");
+
+    try {
+      setBootstrap(await localProfileProvider.initialize());
+    } catch (error) {
+      setBootstrap(null);
+      setStartupError(persistenceErrorMessage(error));
+    }
+  };
 
   const openDataFolder = async () => {
     setFolderState({
@@ -78,7 +113,8 @@ export function App() {
         <div className="sidebar-note">
           <strong>Deterministic first</strong>
           <span>
-            No account, server, database, or AI connection is active in this shell milestone.
+            Local identity and migration records are stored in SQLite. Business modules remain
+            disconnected.
           </span>
         </div>
       </aside>
@@ -86,44 +122,55 @@ export function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Desktop migration · M5</p>
-            <h2>{view === "dashboard" ? "Dashboard shell" : "System boundary"}</h2>
+            <p className="eyebrow">Desktop migration · M6</p>
+            <h2>{view === "dashboard" ? "Persistence foundation" : "System boundary"}</h2>
           </div>
           <div className="profile-chip" aria-label="Active local profile">
             <span className="status-dot" aria-hidden="true" />
-            <span>{profile?.displayName ?? "Resolving local profile"}</span>
+            <span>
+              {profile?.displayName ?? (startupError ? "Persistence unavailable" : "Starting SQLite")}
+            </span>
           </div>
         </header>
 
         <main className="content">
-          {view === "dashboard" ? (
+          {startupError ? (
+            <section className="panel" role="alert">
+              <p className="eyebrow">Recoverable startup error</p>
+              <h3>Local persistence could not start.</h3>
+              <p className="action-message error">{startupError}</p>
+              <button type="button" onClick={() => void retryPersistence()}>
+                Retry persistence
+              </button>
+            </section>
+          ) : view === "dashboard" ? (
             <section aria-labelledby="dashboard-title">
               <div className="hero-panel">
                 <p className="eyebrow">One lever · one mission · measured progress</p>
                 <h3 id="dashboard-title">
-                  The native shell is ready for the first vertical workflow.
+                  The local identity and migration foundation is durable.
                 </h3>
                 <p>
-                  This screen intentionally contains no business records. SQLite persistence and
-                  profile onboarding begin in the next controlled milestone.
+                  ZCVIOS now creates a versioned SQLite database and restores the active local owner
+                  profile on startup. No business data is written by this milestone.
                 </p>
               </div>
 
-              <div className="metric-grid" aria-label="Unconnected dashboard modules">
+              <div className="metric-grid" aria-label="Persistence foundation status">
                 <article>
-                  <span>Weekly lever</span>
-                  <strong>Not connected</strong>
-                  <small>Core engine extracted</small>
+                  <span>Local profile</span>
+                  <strong>{profile ? "Persistent" : "Starting"}</strong>
+                  <small>{profile?.id ?? "Waiting for database"}</small>
                 </article>
                 <article>
-                  <span>Daily mission</span>
-                  <strong>Not connected</strong>
-                  <small>Application service ready</small>
+                  <span>Schema version</span>
+                  <strong>{bootstrap ? `v${bootstrap.schemaVersion}` : "Starting"}</strong>
+                  <small>{bootstrap ? `${bootstrap.migrationCount} migration recorded` : ""}</small>
                 </article>
                 <article>
-                  <span>Progress signal</span>
+                  <span>Business workflows</span>
                   <strong>Not connected</strong>
-                  <small>Report core ready</small>
+                  <small>Vertical migration begins after packaging</small>
                 </article>
               </div>
             </section>
@@ -131,30 +178,39 @@ export function App() {
             <section className="system-grid" aria-labelledby="system-title">
               <article className="panel">
                 <p className="eyebrow">Identity</p>
-                <h3 id="system-title">Active local profile stub</h3>
+                <h3 id="system-title">Durable local owner profile</h3>
                 <dl>
                   <div>
                     <dt>Profile ID</dt>
-                    <dd>{profile?.id ?? "Resolving"}</dd>
+                    <dd>{profile?.id ?? "Starting"}</dd>
                   </div>
                   <div>
                     <dt>Source</dt>
-                    <dd>{profile?.source ?? "Resolving"}</dd>
+                    <dd>{profile?.source ?? "Starting"}</dd>
                   </div>
                   <div>
                     <dt>Persistence</dt>
-                    <dd>Not enabled</dd>
+                    <dd>{bootstrap ? "SQLite ready" : "Starting"}</dd>
+                  </div>
+                  <div>
+                    <dt>Schema</dt>
+                    <dd>{bootstrap ? `Version ${bootstrap.schemaVersion}` : "Starting"}</dd>
+                  </div>
+                  <div>
+                    <dt>Migration history</dt>
+                    <dd>{bootstrap ? `${bootstrap.migrationCount} applied` : "Starting"}</dd>
                   </div>
                 </dl>
               </article>
 
               <article className="panel">
                 <p className="eyebrow">Data ownership</p>
-                <h3>Inspect the application-data location</h3>
+                <h3>Inspect the SQLite data location</h3>
                 <p>
-                  The folder is created only when this explicit action is used. No business data is
-                  written.
+                  The application-data folder contains the versioned zcvios.sqlite3 file. Business
+                  records are not connected yet.
                 </p>
+                {bootstrap ? <p className="action-message">{bootstrap.databasePath}</p> : null}
                 <button
                   type="button"
                   onClick={openDataFolder}
@@ -179,9 +235,10 @@ export function App() {
 
         <footer className="status-footer">
           <span>
-            <span className="status-dot" aria-hidden="true" /> Desktop shell ready
+            <span className="status-dot" aria-hidden="true" />
+            {bootstrap ? "SQLite persistence ready" : "Starting local persistence"}
           </span>
-          <span>Offline deterministic mode</span>
+          <span>{bootstrap ? `Schema v${bootstrap.schemaVersion}` : "Schema pending"}</span>
           <span>No listening application server</span>
         </footer>
       </section>

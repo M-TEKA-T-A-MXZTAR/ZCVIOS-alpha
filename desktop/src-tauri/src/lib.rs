@@ -1,6 +1,20 @@
+mod persistence;
+
 use std::fs;
 use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
+
+use persistence::{database_path, DesktopBootstrapStatus};
+
+#[tauri::command]
+fn initialize_local_profile(app: tauri::AppHandle) -> Result<DesktopBootstrapStatus, String> {
+    let data_directory = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("Could not resolve the application-data directory: {error}"))?;
+
+    persistence::bootstrap_database(&database_path(&data_directory))
+}
 
 #[tauri::command]
 fn open_data_folder(app: tauri::AppHandle) -> Result<String, String> {
@@ -24,7 +38,10 @@ fn open_data_folder(app: tauri::AppHandle) -> Result<String, String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![open_data_folder])
+        .invoke_handler(tauri::generate_handler![
+            initialize_local_profile,
+            open_data_folder
+        ])
         .run(tauri::generate_context!())
-        .expect("ZCVIOS desktop shell failed to start");
+        .expect("ZCVIOS desktop application failed to start");
 }

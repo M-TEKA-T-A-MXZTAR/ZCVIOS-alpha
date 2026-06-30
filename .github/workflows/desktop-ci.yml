@@ -6,6 +6,7 @@ on:
       - 'desktop/**'
       - 'src/application/identity.ts'
       - 'scripts/verify-desktop-shell.mjs'
+      - 'scripts/verify-desktop-persistence.mjs'
       - '.github/workflows/desktop-ci.yml'
       - 'package.json'
   workflow_dispatch:
@@ -15,9 +16,9 @@ permissions:
 
 jobs:
   desktop-shell:
-    name: Desktop Shell Build & Launch
+    name: Desktop Persistence Build & Launch
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -35,7 +36,9 @@ jobs:
         run: npm run build --prefix desktop
 
       - name: Verify desktop boundaries
-        run: node scripts/verify-desktop-shell.mjs
+        run: |
+          node scripts/verify-desktop-shell.mjs
+          node scripts/verify-desktop-persistence.mjs
 
       - name: Install Tauri Linux dependencies
         env:
@@ -64,6 +67,11 @@ jobs:
           rustc --version
           cargo --version
 
+      - name: Test desktop persistence
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo test --quiet --manifest-path desktop/src-tauri/Cargo.toml
+
       - name: Build native desktop shell
         env:
           CARGO_TERM_COLOR: never
@@ -77,7 +85,7 @@ jobs:
           set -e
           if [ "$status" -ne 124 ]; then
             cat /tmp/zcvios-desktop.log
-            echo "Desktop shell did not remain open for the smoke-test window."
+            echo "Desktop application did not remain open for the smoke-test window."
             exit 1
           fi
           cat /tmp/zcvios-desktop.log || true
