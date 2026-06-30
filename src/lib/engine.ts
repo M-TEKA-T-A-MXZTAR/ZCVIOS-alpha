@@ -12,7 +12,10 @@ import {
   weeklyHours,
 } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
-import { endOfWeekMonday, formatISODate, startOfDay, startOfWeekMonday } from "@/lib/time";
+import { endOfWeekMonday, startOfDay, startOfWeekMonday } from "@/lib/time";
+
+const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+const AVERAGE_DAYS_PER_MONTH = 30.4;
 
 type StrategyArgs = {
   userId: string;
@@ -33,7 +36,7 @@ export const runStrategyOnWeeklyRevenueSave = async ({ userId, apiKey, weekStart
     where: {
       userId,
       weekStart: {
-        gte: new Date(weekStart.getTime() - 1000 * 60 * 60 * 24 * 28),
+        gte: new Date(weekStart.getTime() - MILLISECONDS_PER_DAY * 28),
         lte: weekStart,
       },
     },
@@ -55,13 +58,30 @@ export const runStrategyOnWeeklyRevenueSave = async ({ userId, apiKey, weekStart
     where: { userId },
     orderBy: { weekStart: "desc" },
   });
+  const recentPlans = await prisma.weeklyPlan.findMany({
+    where: { userId },
+    orderBy: { weekStart: "desc" },
+  });
+
+  let weeksOnLever = 0;
+  const currentLever = previousStrategy?.selectedLever ?? null;
+  if (currentLever) {
+    for (const plan of recentPlans) {
+      if (plan.selectedLever === currentLever) {
+        weeksOnLever += 1;
+      } else {
+        break;
+      }
+    }
+  }
 
   const ehrSeries = recentWeeks.map((week) => {
-    const logs = weekLogs.filter(
-      (item) =>
-        formatISODate(item.date) >= formatISODate(week.weekStart) &&
-        formatISODate(item.date) <= formatISODate(endOfWeekMonday(week.weekStart)),
-    );
+    const weekStartTime = week.weekStart.getTime();
+    const weekEndTime = endOfWeekMonday(week.weekStart).getTime();
+    const logs = weekLogs.filter((item) => {
+      const itemTime = item.date.getTime();
+      return itemTime >= weekStartTime && itemTime <= weekEndTime;
+    });
     const { leverHours } = weeklyHours(logs);
     return calcEhr(week.revenueCents, leverHours || 1);
   });
@@ -81,7 +101,7 @@ export const runStrategyOnWeeklyRevenueSave = async ({ userId, apiKey, weekStart
     slope,
     executionConsistency: consistency,
     driftRatio: hours.driftRatio,
-    weeksOnLever: previousStrategy ? 1 : 0,
+    weeksOnLever,
     previousLever: previousStrategy?.selectedLever ?? heuristicLever,
     trafficSessions: signals?.trafficSessions ?? latestRevenue?.trafficSessions ?? null,
     leadsGenerated: signals?.leadsGenerated ?? latestRevenue?.leadsGenerated ?? null,
@@ -175,8 +195,8 @@ export const getOrCreateDailyMission = async ({ userId, apiKey, forceRegenerate 
   });
 
   const hasEndedPauseToday =
-    Boolean(lastPause) &&
-    startOfDay(lastPause!.endDate).getTime() === today.getTime();
+    lastPause &&
+    startOfDay(lastPause.endDate).getTime() === today.getTime();
 
   const lastLeverLog = await prisma.workLogSession.findFirst({
     where: {
@@ -186,7 +206,7 @@ export const getOrCreateDailyMission = async ({ userId, apiKey, forceRegenerate 
     orderBy: { date: "desc" },
   });
   const rawDaysInactive = lastLeverLog
-    ? Math.floor((today.getTime() - startOfDay(lastLeverLog.date).getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((today.getTime() - startOfDay(lastLeverLog.date).getTime()) / MILLISECONDS_PER_DAY)
     : 999;
   const daysInactive = Math.max(0, rawDaysInactive);
 
@@ -415,7 +435,10 @@ export const buildMonthlyReport = async (userId: string) => {
   const createdAt = user?.createdAt ?? new Date();
   const monthsActive = Math.max(
     1,
-    Math.floor((startOfDay().getTime() - startOfDay(createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30.4)),
+    Math.floor(
+      (startOfDay().getTime() - startOfDay(createdAt).getTime()) /
+        (MILLISECONDS_PER_DAY * AVERAGE_DAYS_PER_MONTH),
+    ),
   );
 
   const totalRevenue = weeks.reduce((acc, item) => acc + item.revenueCents, 0) / 100;
