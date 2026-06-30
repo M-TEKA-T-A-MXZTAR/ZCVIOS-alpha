@@ -11,6 +11,7 @@ const requiredFiles = [
   "desktop/src/components/ErrorBoundary.tsx",
   "desktop/src/adapters/local-profile-provider.ts",
   "desktop/src-tauri/Cargo.toml",
+  "desktop/src-tauri/icons/icon.png",
   "desktop/src-tauri/src/lib.rs",
   "desktop/src-tauri/src/main.rs",
   "desktop/src-tauri/tauri.conf.json",
@@ -57,6 +58,20 @@ assert.equal(tauriConfig.bundle.active, false);
 assert.equal(tauriConfig.app.windows[0].label, "main");
 assert.match(tauriConfig.app.windows[0].title, /ZCVIOS/);
 
+const cargoManifest = await readFile("desktop/src-tauri/Cargo.toml", "utf8");
+assert.match(cargoManifest, /license = "MIT"/);
+assert.match(cargoManifest, /tauri = \{ version = "=2\.11\.1"/);
+assert.match(cargoManifest, /tauri-plugin-opener = "=2\.5\.4"/);
+assert.match(cargoManifest, /time = "=0\.3\.51"/);
+
+const icon = await readFile("desktop/src-tauri/icons/icon.png");
+assert.deepEqual(
+  [...icon.subarray(0, 8)],
+  [137, 80, 78, 71, 13, 10, 26, 10],
+  "Desktop icon must be a valid PNG file",
+);
+assert.equal(icon.length > 256, true, "Desktop icon must not be an empty placeholder");
+
 const localProfileSource = await readFile(
   "desktop/src/adapters/local-profile-provider.ts",
   "utf8",
@@ -82,6 +97,7 @@ const rustSource = await readFile("desktop/src-tauri/src/lib.rs", "utf8");
 assert.match(rustSource, /fn open_data_folder/);
 assert.match(rustSource, /app_data_dir/);
 assert.match(rustSource, /create_dir_all/);
+assert.match(rustSource, /to_string_lossy\(\)\.into_owned\(\)/);
 assert.match(rustSource, /tauri_plugin_opener/);
 
 const collectSourceFiles = async (directory) => {
