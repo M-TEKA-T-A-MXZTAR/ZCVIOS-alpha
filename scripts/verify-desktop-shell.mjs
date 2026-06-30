@@ -29,16 +29,21 @@ assert.equal(desktopPackage.dependencies.react.startsWith("19."), true);
 assert.equal(Boolean(desktopPackage.dependencies["@tauri-apps/api"]), true);
 assert.equal(Boolean(desktopPackage.devDependencies["@tauri-apps/cli"]), true);
 
-for (const dependency of [
+const forbiddenDependencies = [
   "@tauri-apps/plugin-sql",
   "better-sqlite3",
   "sqlite3",
   "prisma",
   "next",
   "next-auth",
-]) {
+];
+
+for (const dependency of forbiddenDependencies) {
+  const isPresent = Boolean(
+    desktopPackage.dependencies?.[dependency] || desktopPackage.devDependencies?.[dependency],
+  );
   assert.equal(
-    Boolean(desktopPackage.dependencies?.[dependency] || desktopPackage.devDependencies?.[dependency]),
+    isPresent,
     false,
     `Desktop shell must not add persistence or browser-runtime dependency ${dependency}`,
   );
@@ -63,7 +68,7 @@ assert.match(localProfileSource, /ActiveProfileProvider/);
 const appSource = await readFile("desktop/src/App.tsx", "utf8");
 assert.match(appSource, /localProfileProvider/);
 assert.match(appSource, /invoke<string>\("open_data_folder"\)/);
-assert.match(appSource, /No business data is written/);
+assert.match(appSource, /No business data is\s+written/);
 assert.match(appSource, /No listening application server/);
 
 const errorBoundarySource = await readFile(
@@ -82,23 +87,38 @@ assert.match(rustSource, /tauri_plugin_opener/);
 const collectSourceFiles = async (directory) => {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
+
   for (const entry of entries) {
     const target = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...(await collectSourceFiles(target)));
-    else if (/\.(ts|tsx)$/.test(entry.name)) files.push(target);
+    if (entry.isDirectory()) {
+      files.push(...(await collectSourceFiles(target)));
+    } else if (/\.(ts|tsx)$/.test(entry.name)) {
+      files.push(target);
+    }
   }
+
   return files;
 };
 
+const forbiddenRuntimeMarkers = [
+  "fetch(",
+  "XMLHttpRequest",
+  "WebSocket(",
+  "createServer(",
+  ".listen(",
+];
+
 for (const file of await collectSourceFiles("desktop/src")) {
   const source = await readFile(file, "utf8");
-  for (const forbidden of ["fetch(", "XMLHttpRequest", "WebSocket(", "createServer(", ".listen("]) {
+
+  for (const forbidden of forbiddenRuntimeMarkers) {
     assert.equal(
       source.includes(forbidden),
       false,
       `${file} must not introduce a network or listening-server runtime`,
     );
   }
+
   assert.equal(
     source.includes("http://localhost"),
     false,
