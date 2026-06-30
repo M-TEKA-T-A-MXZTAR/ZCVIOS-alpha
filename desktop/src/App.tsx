@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ActiveProfile } from "../../src/application/identity";
 import {
   localProfileProvider,
@@ -17,6 +17,11 @@ const navigation: Array<{ id: View; label: string }> = [
   { id: "system", label: "System" },
 ];
 
+const persistenceErrorMessage = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  return `Could not initialize local persistence: ${message}`;
+};
+
 export function App() {
   const [view, setView] = useState<View>("dashboard");
   const [bootstrap, setBootstrap] = useState<DesktopBootstrapStatus | null>(null);
@@ -28,21 +33,39 @@ export function App() {
 
   const profile: ActiveProfile | null = bootstrap?.profile ?? null;
 
-  const initializePersistence = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false;
+
+    void localProfileProvider
+      .initialize()
+      .then((result) => {
+        if (!cancelled) {
+          setBootstrap(result);
+          setStartupError("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setBootstrap(null);
+          setStartupError(persistenceErrorMessage(error));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const retryPersistence = async () => {
     setStartupError("");
 
     try {
       setBootstrap(await localProfileProvider.initialize());
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
       setBootstrap(null);
-      setStartupError(`Could not initialize local persistence: ${message}`);
+      setStartupError(persistenceErrorMessage(error));
     }
-  }, []);
-
-  useEffect(() => {
-    void initializePersistence();
-  }, [initializePersistence]);
+  };
 
   const openDataFolder = async () => {
     setFolderState({
@@ -116,7 +139,7 @@ export function App() {
               <p className="eyebrow">Recoverable startup error</p>
               <h3>Local persistence could not start.</h3>
               <p className="action-message error">{startupError}</p>
-              <button type="button" onClick={() => void initializePersistence()}>
+              <button type="button" onClick={() => void retryPersistence()}>
                 Retry persistence
               </button>
             </section>
