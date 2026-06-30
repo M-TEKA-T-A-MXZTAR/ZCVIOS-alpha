@@ -7,6 +7,9 @@ from pathlib import Path
 import pytest
 import requests
 
+CORRUPTED_OPENAI_KEY_CIPHERTEXT = "invalid-token-format"
+CORRUPTED_OPENAI_KEY_LAST4 = "9999"
+
 
 @pytest.fixture(scope="session")
 def base_url() -> str:
@@ -62,7 +65,7 @@ def _set_openai_key_ciphertext(email: str, ciphertext: str | None, last4: str | 
             (ciphertext, last4, email),
         )
         connection.commit()
-    assert cursor.rowcount == 1
+    assert cursor.rowcount == 1, f"Expected test user {email} to exist before corrupting stored API key"
 
 
 def test_authenticated_session_is_available(base_url: str, auth_client: requests.Session):
@@ -121,7 +124,7 @@ def test_corrupted_openai_key_falls_back_without_breaking_core_routes(base_url: 
     assert register_response.status_code == 200
 
     session = login_session(base_url, email, password)
-    _set_openai_key_ciphertext(email, "invalid-token-format", "9999")
+    _set_openai_key_ciphertext(email, CORRUPTED_OPENAI_KEY_CIPHERTEXT, CORRUPTED_OPENAI_KEY_LAST4)
 
     mission_response = session.get(f"{base_url}/rpc/mission", timeout=20)
     assert mission_response.status_code == 200
