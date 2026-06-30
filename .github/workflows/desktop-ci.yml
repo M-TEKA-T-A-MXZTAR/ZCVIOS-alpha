@@ -58,7 +58,9 @@ jobs:
           cargo --version
 
       - name: Build native desktop shell
-        run: cargo build --manifest-path desktop/src-tauri/Cargo.toml
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo build --quiet --manifest-path desktop/src-tauri/Cargo.toml
 
       - name: Launch native shell under Xvfb
         run: |
