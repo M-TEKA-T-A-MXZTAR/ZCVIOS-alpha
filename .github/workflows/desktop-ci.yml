@@ -41,8 +41,11 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
+          if ! sudo apt-get update > /tmp/zcvios-apt.log 2>&1; then
+            tail -n 120 /tmp/zcvios-apt.log
+            exit 1
+          fi
+          if ! sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev \
             build-essential \
             file \
@@ -50,7 +53,11 @@ jobs:
             libssl-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
-            xvfb
+            xvfb >> /tmp/zcvios-apt.log 2>&1; then
+            tail -n 120 /tmp/zcvios-apt.log
+            exit 1
+          fi
+          echo "Tauri Linux dependencies installed."
 
       - name: Confirm Rust toolchain
         run: |
