@@ -8,6 +8,16 @@ ZC-VIOS helps creators organize workflow data, review progress, review useful pr
 
 > **Alpha disclaimer:** This repository is an alpha template focused on core engine stability, reproducible local development, and transparent documentation.
 
+## Project control documents
+
+Current build work is governed by:
+
+- [State-of-System Audit — 2026-07-01](docs/STATE_OF_SYSTEM_AUDIT_2026-07-01.md) — audited baseline, confirmed defects, risks, and required decisions
+- [Master Build Plan](docs/MASTER_BUILD_PLAN.md) — authoritative implementation order and acceptance gates
+- [Progress Ledger](docs/PROGRESS_LEDGER.md) — append-only milestone, decision, defect, and verification record
+
+Older execution plans and work queues remain historical or specialist inputs. They do not override the Master Build Plan.
+
 ## Privacy-first positioning
 
 ZC-VIOS is designed as a user-controlled planning tool.
@@ -148,12 +158,15 @@ The GitHub Actions workflow runs two jobs:
 - [System Overview](docs/SYSTEM_OVERVIEW.md) - Architecture, components, and engine concepts
 - [Product Thesis](docs/PRODUCT_THESIS.md) - Core user, problem, and promise
 - [Architecture Principles](docs/ARCHITECTURE_PRINCIPLES.md) - Design principles for development
+- [Desktop Migration Plan](docs/DESKTOP_MIGRATION_PLAN.md) - Controlled browser-to-desktop migration sequence
+- [Desktop Feature-Parity Matrix](docs/DESKTOP_FEATURE_PARITY_MATRIX.md) - Capability evidence and migration gates
+- [Cross-Platform Desktop Requirements](docs/CROSS_PLATFORM_DESKTOP_REQUIREMENTS.md) - Linux, Windows, and macOS product requirements
 - [Local-First AI Runtime Plan](docs/LOCAL_AI_RUNTIME.md) - Planned Ollama, Gemini, and OpenAI provider boundaries
 - [ZC-VIOS Lore](docs/ZCVIOS_LORE.md) - Vision and philosophy behind the system
 - [ZCcode Language](docs/ZCCODE_LANGUAGE.md) - Structured prompting language for system design
 - [Roadmap](docs/ROADMAP.md) - Current status and future direction
-- [v1.2.0 Execution Plan](docs/V1_2_0_EXECUTION_PLAN.md) - Next milestone deliverables
-- [v1.2.0 Work Queue](docs/V1_2_0_WORK_QUEUE.md) - Implementation planning
+- [v1.2.0 Execution Plan](docs/V1_2_0_EXECUTION_PLAN.md) - Historical milestone input
+- [v1.2.0 Work Queue](docs/V1_2_0_WORK_QUEUE.md) - Historical implementation-planning input
 - [Support](docs/SUPPORT.md) - How to support development
 
 ## License
