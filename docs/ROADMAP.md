@@ -70,6 +70,28 @@ ZC-VIOS is not intended to collect passwords, payment credentials, recovery code
 
 ---
 
+## Desktop Migration Workstream
+
+ZCVIOS is planned to move from a browser-delivered Next.js application to an installable local-first desktop application through small, reversible milestones.
+
+The current browser application remains operational during migration. It will not be retired until desktop feature parity, data migration, installer upgrades, export, backup, and deletion have been verified.
+
+Desktop planning documents:
+
+- [Desktop Migration Plan](DESKTOP_MIGRATION_PLAN.md)
+- [Desktop Feature-Parity Matrix](DESKTOP_FEATURE_PARITY_MATRIX.md)
+- [Desktop Data Ownership and Lifecycle](DESKTOP_DATA_OWNERSHIP.md)
+- [Desktop Installer and Release Plan](DESKTOP_INSTALLER_PLAN.md)
+
+Initial desktop packaging targets:
+
+- Debian package (`.deb`) as the primary Ubuntu installer
+- AppImage as the portable Linux fallback
+
+The desktop workstream must not displace the creator-engine priorities by combining unrelated feature expansion with migration work. Each implementation PR should address one bounded architectural or workflow milestone.
+
+---
+
 ## Future Direction
 
 **Creator Planning Workspace — Longer-Term Vision**
