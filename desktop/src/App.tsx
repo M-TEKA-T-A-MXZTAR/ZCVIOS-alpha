@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ActiveProfile } from "../../src/application/identity";
 import {
   localProfileProvider,
@@ -28,7 +28,7 @@ export function App() {
 
   const profile: ActiveProfile | null = bootstrap?.profile ?? null;
 
-  const initializePersistence = async () => {
+  const initializePersistence = useCallback(async () => {
     setStartupError("");
 
     try {
@@ -38,11 +38,11 @@ export function App() {
       setBootstrap(null);
       setStartupError(`Could not initialize local persistence: ${message}`);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void initializePersistence();
-  }, []);
+  }, [initializePersistence]);
 
   const openDataFolder = async () => {
     setFolderState({
@@ -184,7 +184,7 @@ export function App() {
                 <p className="eyebrow">Data ownership</p>
                 <h3>Inspect the SQLite data location</h3>
                 <p>
-                  The application-data folder contains the versioned `zcvios.sqlite3` file. Business
+                  The application-data folder contains the versioned zcvios.sqlite3 file. Business
                   records are not connected yet.
                 </p>
                 {bootstrap ? <p className="action-message">{bootstrap.databasePath}</p> : null}
