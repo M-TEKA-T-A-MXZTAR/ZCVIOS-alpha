@@ -7,12 +7,12 @@ import {
   MissionSource,
 } from "@prisma/client";
 import { z } from "zod";
+import { DETERMINISTIC_MISSIONS } from "@/core/missions";
 import {
   selectWeeklyLeverDeterministically,
   type StrategyInput,
 } from "@/core/strategy";
 import {
-  DETERMINISTIC_MISSIONS,
   EXECUTION_AGENT_SYSTEM_PROMPT,
   LEVER_OPTIONS,
   STRATEGY_AGENT_SYSTEM_PROMPT,
