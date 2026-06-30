@@ -1,7 +1,7 @@
 # ZCVIOS Desktop Feature-Parity Matrix
 
 **Status:** Migration control document  
-**Last updated:** 2026-06-30
+**Last updated:** 2026-07-01
 
 ## Purpose
 
@@ -20,12 +20,12 @@ This matrix prevents the desktop conversion from quietly dropping working ZCVIOS
 | Capability | Browser baseline | Desktop status | Planned slice | Desktop parity gate |
 |---|---|---|---|---|
 | Application launch | Runs through Next.js in a browser | In progress — native Tauri shell, frontend build and headless launch smoke test added; local Ubuntu launch still required | M5 | Opens as a branded desktop window without launching a browser or requiring a listening port |
-| Registration | Email/password registration | Planned replacement | M4/M8 | Replaced by local profile onboarding; no web session required |
-| Login and session | NextAuth email/password session behind an active-profile provider | In progress — durable SQLite local-owner profile and active-profile setting added; interactive onboarding pending | M4/M6 | Active local profile is resolved on startup and survives restart |
-| Onboarding | Authenticated onboarding page | Planned | M8.1 | Profile and business settings validate, save, reload, and survive restart |
-| Dashboard | Authenticated dashboard | In progress — persistence status only; business state intentionally disconnected | M8.2 | Displays current lever, mission, work time, revenue signal, progress signal, and next action from local data |
+| Registration | Email/password registration | Planned replacement — local-owner record exists without web registration | M4/M8 | Replaced by local profile onboarding; no web session required |
+| Login and session | NextAuth email/password session behind an active-profile provider | In progress — durable SQLite local-owner profile and active-profile setting added; no desktop login required | M4/M6 | Active local profile is resolved on startup and survives restart |
+| Onboarding | Authenticated onboarding page | In progress — editable operator/business name, focused capacity, weekly revenue baseline, primary channel and active offer added with validation and SQLite persistence | M8.1 | Profile and business settings validate, save, reload, and survive restart |
+| Dashboard | Authenticated dashboard | In progress — operator baseline completion, capacity, baseline revenue, channel and active offer are shown; lever and mission remain disconnected | M8.2 | Displays current lever, mission, work time, revenue signal, progress signal, and next action from local data |
 | Work logging | Work-session CRUD | Planned | M8.3 | Add, validate, display, restart, edit/delete where currently supported, and recalculate dashboard/report state |
-| Revenue entry | Weekly revenue CRUD | Planned | M8.4 | Store integer cents, enforce week scope, reload after restart, and update reports |
+| Revenue entry | Weekly revenue CRUD | Planned — M8.1 stores only the starting baseline in integer cents, not weekly history | M8.4 | Store integer cents, enforce week scope, reload after restart, and update reports |
 | Weekly lever recommendation | Deterministic logic with optional AI assistance | Planned | M1/M8.5 | Shared fixtures return equivalent lever and explanation in browser and desktop adapters |
 | Manual lever override | RPC-based override | Planned | M8.5 | Override, reason, persistence, report visibility, and restart verification work locally |
 | Daily mission generation | Template and optional AI paths | Planned | M1/M8.6 | Template mission works offline; source is recorded; mission persists and reloads |
@@ -36,16 +36,18 @@ This matrix prevents the desktop conversion from quietly dropping working ZCVIOS
 | PDF export | Existing PDF generation dependencies | Planned | M8.8 | User selects destination, export succeeds, file opens, and failure is visible |
 | User data export | Privacy control documented as operational | Planned | M8.8 | Export includes all owned records, schema/version metadata, and a clear destination |
 | Account/data deletion | Privacy control documented as operational | Planned replacement | M8.8 | Local profile deletion explains scope, requires explicit confirmation, and verifies removal |
-| Settings | Authenticated settings page | Planned | M8.1/M8.8 | Settings persist locally, reload after restart, and do not expose secrets |
+| Settings | Authenticated settings page | In progress — operator baseline values can be edited, reloaded and saved locally; broader privacy/export settings remain planned | M8.1/M8.8 | Settings persist locally, reload after restart, and do not expose secrets |
 | Optional AI key/configuration | User-configured optional AI | Deferred until deterministic parity | M8.9 | AI can be disabled; unavailable AI falls back without blocking core operation |
 | Public-page review | Under consideration/optional | Deferred | Post-parity | User-supplied public URL only, explicit action, rate limits, and no hidden account access |
-| Error handling | Next.js error boundary and route errors | In progress — desktop render boundary plus recoverable SQLite startup error and retry control added | M5 onward | Desktop error boundary, visible failure state, logs, and safe recovery path |
+| Error handling | Next.js error boundary and route errors | In progress — desktop render boundary, recoverable SQLite startup error, validation errors and retry control added | M5 onward | Desktop error boundary, visible failure state, logs, and safe recovery path |
 | Data location visibility | Local SQLite through Prisma | In progress — `zcvios.sqlite3` path is displayed and the native data folder can be opened | M6 | Settings shows the application data path and provides an Open Data Folder action |
 | Backup | Manual export-oriented baseline | Planned | M8.8 | User-initiated backup creates a dated copy without freezing the UI |
-| Upgrade preservation | Not applicable to browser deployment | In progress — package payload replacement test preserves the SQLite profile; real version-to-version upgrade remains pending | M7 | Installing a newer package preserves database and user exports |
-| Uninstall behaviour | Not applicable to browser deployment | In progress — CI removes the extracted Debian application payload and confirms the external data directory remains intact; local package-manager test pending | M7 | Program removal does not silently delete user-created data |
+| Upgrade preservation | Not applicable to browser deployment | In progress — package payload replacement test preserves the SQLite profile and operator baseline; real version-to-version upgrade remains pending | M7 | Installing a newer package preserves database and user exports |
+| Uninstall behaviour | Not applicable to browser deployment | In progress — CI removes the extracted Debian application payload and confirms the external profile and operator baseline remain intact; local package-manager test pending | M7 | Program removal does not silently delete user-created data |
 | Ubuntu application menu | Not applicable | In progress — generated Debian launcher, executable and icon are inspected; local Ubuntu menu confirmation pending | M7 | `.deb` install creates a correct launcher, icon, name, category, and executable entry |
-| Portable Linux launch | Not applicable | In progress — AppImage is generated, extracted, inspected and launched twice on Ubuntu 22.04 with persistent local data; local supported-machine launch pending | M7 | AppImage launches on the supported baseline and uses the same documented data location |
+| Portable Linux launch | Not applicable | In progress — AppImage is generated, extracted, inspected and launched twice on Ubuntu 22.04 with persistent profile and operator baseline data; local supported-machine launch pending | M7 | AppImage launches on the supported baseline and uses the same documented data location |
+| Windows packaging | Not applicable | Planned — platform-neutral core is required now; unsigned Windows test build belongs to a separate portability slice | M7.3 | Unsigned test package launches, uses the native data path, and preserves the same schema without Linux-only assumptions |
+| macOS packaging | Not applicable | Planned — platform-neutral core is required now; unsigned macOS test build belongs to a separate portability slice | M7.3 | Unsigned test app launches, uses the native data path, and preserves the same schema without Linux-only assumptions |
 
 ## Data-model coverage
 
@@ -53,7 +55,8 @@ The desktop persistence layer must cover every currently relevant model before p
 
 | Model/domain record | Desktop repository contract | Desktop SQLite adapter | Migration/import verified |
 |---|---:|---:|---:|
-| User / local profile | In progress — active-profile contract and durable local-owner provider established | In progress — create/load/reopen tests added | Planned |
+| User / local profile | In progress — active-profile contract, durable local-owner provider and editable display name established | In progress — create/load/update/reopen tests added | Planned |
+| OperatorBaseline | In progress — focused capacity, baseline revenue, primary channel and active offer contract added | In progress — schema-v2 table, transaction, validation and reopen tests added | Not applicable |
 | WeeklyRevenue | Planned | Planned | Planned |
 | WeeklyPlan | Planned | Planned | Planned |
 | WorkLogSession | Planned | Planned | Planned |
@@ -61,7 +64,7 @@ The desktop persistence layer must cover every currently relevant model before p
 | DailyMission | Planned | Planned | Planned |
 | PauseWindow | Planned | Planned | Planned |
 | ApplicationSettings | In progress — active profile setting defined | In progress — SQLite table and bootstrap adapter added | Not applicable |
-| SchemaVersion | In progress — schema version exposed by bootstrap status | In progress — migration ledger maximum enforced | Not applicable |
+| SchemaVersion | In progress — schema version exposed by bootstrap status | In progress — migration ledger maximum enforced through schema v2 | Not applicable |
 | MigrationHistory | In progress — versioned migration runner defined | In progress — transactionally recorded in SQLite | Not applicable |
 
 ## Verification evidence required per row
@@ -84,13 +87,15 @@ A row may be changed to **Verified** only when the relevant PR or verification r
 The following are not required before the first desktop alpha installer:
 
 - automatic updater
-- Windows or macOS packages
+- signed or publicly distributed Windows/macOS packages
 - multi-user team support
 - mobile interface
 - public-page review
 - new AI providers
 - broad redesign of the visual language
 - new revenue or strategy features unrelated to migration
+
+Windows and macOS remain planned supported platforms; only their signed public-distribution work is excluded from the first Linux alpha gate.
 
 These exclusions prevent the migration from becoming a general product rewrite.
 
