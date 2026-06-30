@@ -11,7 +11,7 @@
     "prisma:migrate": "prisma migrate dev --name init_alpha",
     "prisma:push": "prisma db push",
     "preseed": "npm run prisma:generate",
-    "seed": "node prisma/seed.mjs",
+    "seed": "node scripts/run-seed.mjs",
     "verify:repository-hygiene": "node scripts/verify-repository-hygiene.mjs",
     "verify:desktop-shell": "node scripts/verify-desktop-shell.mjs",
     "verify:desktop-persistence": "node scripts/verify-desktop-persistence.mjs",
