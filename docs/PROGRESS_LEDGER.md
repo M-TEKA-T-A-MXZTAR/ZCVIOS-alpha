@@ -38,6 +38,7 @@ The ledger is append-only in meaning:
 |---|---|
 | Audited main | `bbf8c002dd9d63c5cbdd5c20786898409c012e8b` |
 | Latest merged baseline PR | #67 |
+| Active planning-control PR | #68 — draft |
 | Browser runtime | Operational alpha; reliability repair required |
 | Desktop runtime | M8.1 operator baseline implemented; parity incomplete |
 | Linux packaging | Debian/AppImage test-build capability |
@@ -184,6 +185,16 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 - **Change:** Added state audit, master build plan, and progress ledger on `docs/master-build-plan-ledger`
 - **Status after:** P0.1 Active pending review and merge
 - **Next allowed action:** Link documents from README, review documentation-only diff, open draft PR
+
+### LED-2026-07-01-005 — Planning-control PR opened
+
+- **Milestone:** P0.1
+- **Change:** Opened draft PR #68, `Establish master build plan and progress ledger`
+- **PR head before this ledger update:** `ad83a4a9b224d74a44e43e40765348f515a90f5d`
+- **Scope evidence:** Three new control documents and README links only
+- **Status after:** Active / draft review
+- **Unresolved risk:** Documentation requires review; no runtime defect is fixed by this PR
+- **Next allowed action:** Inspect PR checks and review comments once, then repair documentation findings only
 
 ## Entry template
 
