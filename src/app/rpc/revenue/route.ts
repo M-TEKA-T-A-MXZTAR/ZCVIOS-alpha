@@ -3,7 +3,7 @@ import { z } from "zod";
 import { decryptApiKey } from "@/lib/crypto";
 import { runStrategyOnWeeklyRevenueSave } from "@/lib/engine";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { startOfWeekMonday } from "@/lib/time";
 import { unauthorized } from "@/lib/http";
 
@@ -19,22 +19,22 @@ const schema = z.object({
 });
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   const weekStart = startOfWeekMonday();
 
   const [current, recent, strategy] = await Promise.all([
     prisma.weeklyRevenue.findUnique({
-      where: { userId_weekStart: { userId: session.user.id, weekStart } },
+      where: { userId_weekStart: { userId: profile.id, weekStart } },
     }),
     prisma.weeklyRevenue.findMany({
-      where: { userId: session.user.id },
+      where: { userId: profile.id },
       orderBy: { weekStart: "desc" },
       take: 8,
     }),
     prisma.weeklyPlan.findUnique({
-      where: { userId_weekStart: { userId: session.user.id, weekStart } },
+      where: { userId_weekStart: { userId: profile.id, weekStart } },
     }),
   ]);
 
@@ -63,8 +63,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   try {
     const body = await req.json();
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     const weekStart = input.weekStart ? startOfWeekMonday(new Date(input.weekStart)) : startOfWeekMonday();
 
     const revenue = await prisma.weeklyRevenue.upsert({
-      where: { userId_weekStart: { userId: session.user.id, weekStart } },
+      where: { userId_weekStart: { userId: profile.id, weekStart } },
       update: {
         revenueCents: Math.round(input.revenue * 100),
         note: input.note,
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
         strategyTriggered: true,
       },
       create: {
-        userId: session.user.id,
+        userId: profile.id,
         weekStart,
         revenueCents: Math.round(input.revenue * 100),
         note: input.note,
@@ -97,11 +97,11 @@ export async function POST(req: Request) {
       },
     });
 
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    const user = await prisma.user.findUnique({ where: { id: profile.id } });
     const apiKey = user?.openAiApiKeyEncrypted ? decryptApiKey(user.openAiApiKeyEncrypted) : null;
 
     const strategy = await runStrategyOnWeeklyRevenueSave({
-      userId: session.user.id,
+      userId: profile.id,
       apiKey,
       weekStart,
       note: input.note,

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { buildWeeklyReport } from "@/lib/engine";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { unauthorized } from "@/lib/http";
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
-  const report = await buildWeeklyReport(session.user.id);
+  const report = await buildWeeklyReport(profile.id);
   return NextResponse.json(report);
 }

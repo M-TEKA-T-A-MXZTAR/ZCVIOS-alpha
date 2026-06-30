@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireActiveProfile } from "@/lib/session";
 import { unauthorized } from "@/lib/http";
 
 export async function GET() {
-  const session = await requireSession();
-  if (!session) return unauthorized();
+  const profile = await requireActiveProfile();
+  if (!profile) return unauthorized();
 
   const [user, weeklyRevenues, strategies, logs, missions, pauses] = await Promise.all([
     prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: profile.id },
       select: {
         email: true,
         name: true,
@@ -27,11 +27,11 @@ export async function GET() {
         createdAt: true,
       },
     }),
-    prisma.weeklyRevenue.findMany({ where: { userId: session.user.id }, orderBy: { weekStart: "asc" } }),
-    prisma.weeklyPlan.findMany({ where: { userId: session.user.id }, orderBy: { weekStart: "asc" } }),
-    prisma.workLogSession.findMany({ where: { userId: session.user.id }, orderBy: { date: "asc" } }),
-    prisma.dailyMission.findMany({ where: { userId: session.user.id }, orderBy: { date: "asc" } }),
-    prisma.pauseWindow.findMany({ where: { userId: session.user.id }, orderBy: { startDate: "asc" } }),
+    prisma.weeklyRevenue.findMany({ where: { userId: profile.id }, orderBy: { weekStart: "asc" } }),
+    prisma.weeklyPlan.findMany({ where: { userId: profile.id }, orderBy: { weekStart: "asc" } }),
+    prisma.workLogSession.findMany({ where: { userId: profile.id }, orderBy: { date: "asc" } }),
+    prisma.dailyMission.findMany({ where: { userId: profile.id }, orderBy: { date: "asc" } }),
+    prisma.pauseWindow.findMany({ where: { userId: profile.id }, orderBy: { startDate: "asc" } }),
   ]);
 
   return NextResponse.json({

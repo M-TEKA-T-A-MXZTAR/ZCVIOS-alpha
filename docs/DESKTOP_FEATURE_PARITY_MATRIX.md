@@ -21,7 +21,7 @@ This matrix prevents the desktop conversion from quietly dropping working ZCVIOS
 |---|---|---|---|---|
 | Application launch | Runs through Next.js in a browser | Planned | M5 | Opens as a branded desktop window without launching a browser or requiring a listening port |
 | Registration | Email/password registration | Planned replacement | M4/M8 | Replaced by local profile onboarding; no web session required |
-| Login and session | NextAuth email/password session | Planned replacement | M4 | Active local profile is resolved on startup and survives restart |
+| Login and session | NextAuth email/password session behind an active-profile provider | In progress — delivery-neutral profile contract established; local provider pending | M4 | Active local profile is resolved on startup and survives restart |
 | Onboarding | Authenticated onboarding page | Planned | M8.1 | Profile and business settings validate, save, reload, and survive restart |
 | Dashboard | Authenticated dashboard | Planned | M8.2 | Displays current lever, mission, work time, revenue signal, progress signal, and next action from local data |
 | Work logging | Work-session CRUD | Planned | M8.3 | Add, validate, display, restart, edit/delete where currently supported, and recalculate dashboard/report state |
@@ -53,7 +53,7 @@ The desktop persistence layer must cover every currently relevant model before p
 
 | Model/domain record | Desktop repository contract | Desktop SQLite adapter | Migration/import verified |
 |---|---:|---:|---:|
-| User / local profile | Planned | Planned | Planned |
+| User / local profile | In progress — active-profile provider contract established | Planned | Planned |
 | WeeklyRevenue | Planned | Planned | Planned |
 | WeeklyPlan | Planned | Planned | Planned |
 | WorkLogSession | Planned | Planned | Planned |
