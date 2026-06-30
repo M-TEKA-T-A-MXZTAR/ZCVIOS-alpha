@@ -223,3 +223,57 @@ Recommended order:
 8. Optional user-authorized integrations
 
 This keeps the project credible, testable, and easier to maintain.
+
+---
+
+## 13. Provider-Neutral AI Boundary
+
+Optional AI should use one provider-neutral application contract with separate adapters for deterministic mode, local Ollama, Gemini, and OpenAI.
+
+The application layer should not contain provider-specific assumptions about:
+
+- authentication,
+- model names,
+- network endpoints,
+- billing,
+- response formats,
+- or hardware capabilities.
+
+The provider contract should expose bounded operations such as:
+
+- explain a deterministic lever,
+- rewrite a mission without changing its objective,
+- summarize selected user-entered observations,
+- test provider availability,
+- list explicitly available models,
+- and cancel an active request.
+
+Local Ollama should be the preferred optional provider. The application should integrate with a separately installed local Ollama service through a loopback endpoint by default. ZCVIOS should not silently install Ollama or download model weights.
+
+Gemini and OpenAI adapters should require user-owned API credentials, explicit cloud-data consent, visible provider labelling, and secure secret storage outside the SQLite business database.
+
+All providers must return suggestions rather than authoritative business records. Deterministic calculations, persisted values, permissions, publication, spending, and destructive operations remain outside the AI provider boundary.
+
+See [Local-First AI Runtime Plan](LOCAL_AI_RUNTIME.md).
+
+---
+
+## 14. Resource-Aware Local AI
+
+Local model execution must not freeze the desktop interface or assume modern gaming hardware.
+
+The implementation should provide:
+
+- one local AI job at a time,
+- asynchronous execution,
+- cancellation,
+- visible elapsed time and status,
+- bounded context and output sizes,
+- conservative default resource use,
+- user-selectable resource profiles,
+- hardware and installed-model detection,
+- and safe deterministic fallback.
+
+A small text model may be recommended for older CPU-only systems, but the user retains control over model selection.
+
+Visual rendering and image-generation engines are not part of this text-provider contract. They require separate hardware, packaging, licensing, and Windows/macOS compatibility gates.
