@@ -67,7 +67,24 @@ jobs:
       - name: Build native desktop shell
         env:
           CARGO_TERM_COLOR: never
-        run: cargo build --quiet --manifest-path desktop/src-tauri/Cargo.toml
+        run: |
+          set +e
+          cargo build --quiet --manifest-path desktop/src-tauri/Cargo.toml 2> /tmp/zcvios-cargo-error.log
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            cat /tmp/zcvios-cargo-error.log
+            exit "$status"
+          fi
+
+      - name: Upload native compiler diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: zcvios-native-compiler-diagnostics
+          path: /tmp/zcvios-cargo-error.log
+          if-no-files-found: ignore
+          retention-days: 1
 
       - name: Launch native shell under Xvfb
         run: |
