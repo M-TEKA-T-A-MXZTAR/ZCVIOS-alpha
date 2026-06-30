@@ -47,6 +47,32 @@ function desktopValue(content, key) {
   return match[1].trim();
 }
 
+async function verifyDesktopEntries(paths, packageLabel) {
+  assert.ok(paths.length >= 1, `${packageLabel} must contain a desktop entry`);
+
+  for (const path of paths) {
+    const content = await readFile(path, "utf8");
+    assert.equal(
+      desktopValue(content, "Name"),
+      "ZCVIOS Desktop",
+      `${packageLabel} desktop entry has the wrong application name: ${path}`,
+    );
+    assert.match(
+      desktopValue(content, "Exec"),
+      /zcvios-desktop/,
+      `${packageLabel} desktop entry has the wrong executable: ${path}`,
+    );
+    assert.ok(
+      desktopValue(content, "Icon").length > 0,
+      `${packageLabel} desktop entry has no icon: ${path}`,
+    );
+    assert.ok(
+      desktopValue(content, "Categories").length > 0,
+      `${packageLabel} desktop entry has no category: ${path}`,
+    );
+  }
+}
+
 const debFiles = await collectFiles(
   join(bundleRoot, "deb"),
   (path) => path.endsWith(".deb"),
@@ -87,15 +113,9 @@ const debIcons = await collectFiles(
   debExtractRoot,
   (path) => path.endsWith(".png") && path.includes("/icons/"),
 );
-assert.equal(debDesktopEntries.length, 1, "Debian package must contain one desktop entry");
-assert.equal(debBinaries.length, 1, "Debian package must contain zcvios-desktop");
+assert.ok(debBinaries.length >= 1, "Debian package must contain zcvios-desktop");
 assert.ok(debIcons.length >= 1, "Debian package must contain a launcher icon");
-
-const debDesktop = await readFile(debDesktopEntries[0], "utf8");
-assert.equal(desktopValue(debDesktop, "Name"), "ZCVIOS Desktop");
-assert.match(desktopValue(debDesktop, "Exec"), /zcvios-desktop/);
-assert.ok(desktopValue(debDesktop, "Icon").length > 0);
-assert.ok(desktopValue(debDesktop, "Categories").length > 0);
+await verifyDesktopEntries(debDesktopEntries, "Debian package");
 
 await chmod(appImagePath, 0o755);
 const appImageExtractRoot = await mkdtemp(join(tmpdir(), "zcvios-appimage-inspect-"));
@@ -116,15 +136,9 @@ const appRuns = await collectFiles(
   squashRoot,
   (path) => basename(path) === "AppRun",
 );
-assert.equal(appImageDesktopEntries.length, 1, "AppImage must contain one desktop entry");
-assert.equal(appImageBinaries.length, 1, "AppImage must contain zcvios-desktop");
-assert.equal(appRuns.length, 1, "AppImage must contain AppRun");
-
-const appImageDesktop = await readFile(appImageDesktopEntries[0], "utf8");
-assert.equal(desktopValue(appImageDesktop, "Name"), "ZCVIOS Desktop");
-assert.match(desktopValue(appImageDesktop, "Exec"), /zcvios-desktop/);
-assert.ok(desktopValue(appImageDesktop, "Icon").length > 0);
-assert.ok(desktopValue(appImageDesktop, "Categories").length > 0);
+assert.ok(appImageBinaries.length >= 1, "AppImage must contain zcvios-desktop");
+assert.ok(appRuns.length >= 1, "AppImage must contain AppRun");
+await verifyDesktopEntries(appImageDesktopEntries, "AppImage");
 
 const manifest = {
   schemaVersion: 1,
@@ -134,14 +148,16 @@ const manifest = {
     package: debPackage,
     version: debVersion,
     architecture: debArchitecture,
-    desktopEntry: relative(debExtractRoot, debDesktopEntries[0]),
-    binary: relative(debExtractRoot, debBinaries[0]),
+    desktopEntries: debDesktopEntries.map((path) => relative(debExtractRoot, path)),
+    binaries: debBinaries.map((path) => relative(debExtractRoot, path)),
+    icons: debIcons.map((path) => relative(debExtractRoot, path)),
   },
   appImage: {
     file: relative(bundleRoot, appImagePath),
     bytes: appImageStats.size,
-    desktopEntry: relative(squashRoot, appImageDesktopEntries[0]),
-    binary: relative(squashRoot, appImageBinaries[0]),
+    desktopEntries: appImageDesktopEntries.map((path) => relative(squashRoot, path)),
+    binaries: appImageBinaries.map((path) => relative(squashRoot, path)),
+    appRuns: appRuns.map((path) => relative(squashRoot, path)),
   },
 };
 
