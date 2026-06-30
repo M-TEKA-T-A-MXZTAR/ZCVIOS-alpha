@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const repositoryRoot = resolve(import.meta.dirname, "..");
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ignoreFile = readFileSync(resolve(repositoryRoot, ".gitignore"), "utf8");
 const ignoreLines = ignoreFile.split(/\r?\n/).map((line) => line.trim());
 
