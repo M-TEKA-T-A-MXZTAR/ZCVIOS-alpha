@@ -107,11 +107,15 @@ assert.doesNotMatch(
 );
 
 function workflowEventPresent(yaml, event) {
-  const e = event.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if (new RegExp(`^on:\\s*\\n(?:[ \\t]+[^\\n]*\\n)*[ \\t]+${e}\\s*:`, "m").test(yaml)) return true;
-  if (new RegExp(`^${e}\\s*:`, "m").test(yaml)) return true;
-  if (new RegExp(`\\bon\\s*:\\s*\\[[^\\]]*\\b${e}\\b`).test(yaml)) return true;
-  if (new RegExp(`\\bon\\s*:\\s*\\{(?:[^{}]|\\{[^}]*\\})*\\b${e}\\s*:`).test(yaml)) return true;
+  const escapedEvent = event.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Block-mapping form:  on:\n  event:
+  if (new RegExp(`^on:\\s*\\n(?:[ \\t]+[^\\n]*\\n)*[ \\t]+${escapedEvent}\\s*:`, "m").test(yaml)) return true;
+  // Direct top-level key form:  event:
+  if (new RegExp(`^${escapedEvent}\\s*:`, "m").test(yaml)) return true;
+  // Flow-sequence form:  on: [event]
+  if (new RegExp(`\\bon\\s*:\\s*\\[[^\\]]*\\b${escapedEvent}\\b`).test(yaml)) return true;
+  // Flow-mapping form:  on: { event: {} }
+  if (new RegExp(`\\bon\\s*:\\s*\\{(?:[^{}]|\\{[^}]*\\})*\\b${escapedEvent}\\s*:`).test(yaml)) return true;
   return false;
 }
 

@@ -48,13 +48,13 @@ function desktopValue(content, key) {
 }
 
 async function assertDirectory(dirPath, label) {
-  let s;
+  let dirStats;
   try {
-    s = await stat(dirPath);
+    dirStats = await stat(dirPath);
   } catch {
     assert.fail(`${label} directory not found: ${dirPath}`);
   }
-  assert.ok(s.isDirectory(), `${label} path is not a directory: ${dirPath}`);
+  assert.ok(dirStats.isDirectory(), `${label} path is not a directory: ${dirPath}`);
 }
 
 async function verifyDesktopEntries(paths, packageLabel) {
