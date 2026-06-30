@@ -79,6 +79,7 @@ const localProfileSource = await readFile(
 assert.match(localProfileSource, /LOCAL_OWNER_PROFILE_ID = "local-owner"/);
 assert.match(localProfileSource, /ActiveProfileProvider/);
 assert.match(localProfileSource, /initialize_local_profile/);
+assert.match(localProfileSource, /save_operator_baseline/);
 assert.equal(
   localProfileSource.includes('source: "local-profile"'),
   false,
@@ -88,8 +89,11 @@ assert.equal(
 const appSource = await readFile("desktop/src/App.tsx", "utf8");
 assert.match(appSource, /localProfileProvider/);
 assert.match(appSource, /invoke<string>\("open_data_folder"\)/);
-assert.match(appSource, /No business data is\s+written/);
+assert.match(appSource, /Operator baseline/);
+assert.match(appSource, /Recommendations and missions remain/);
 assert.match(appSource, /No listening application server/);
+assert.doesNotMatch(appSource, /generate.*lever/i);
+assert.doesNotMatch(appSource, /generate.*mission/i);
 
 const errorBoundarySource = await readFile(
   "desktop/src/components/ErrorBoundary.tsx",
@@ -147,4 +151,4 @@ for (const file of await collectSourceFiles("desktop/src")) {
   );
 }
 
-console.log("PASS: Tauri desktop shell boundary verified.");
+console.log("PASS: Tauri desktop shell and local operator baseline boundary verified.");
