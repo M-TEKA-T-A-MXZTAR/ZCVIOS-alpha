@@ -103,10 +103,10 @@ Use the cross-platform base configuration for shared identity and behaviour.
 Use separate merged configurations for native differences:
 
 ```text
-src-tauri/tauri.conf.json
-src-tauri/tauri.linux.conf.json
-src-tauri/tauri.windows.conf.json
-src-tauri/tauri.macos.conf.json
+desktop/src-tauri/tauri.conf.json
+desktop/src-tauri/tauri.linux.conf.json
+desktop/src-tauri/tauri.windows.conf.json
+desktop/src-tauri/tauri.macos.conf.json
 ```
 
 Each platform configuration may define only genuine platform differences, including:
