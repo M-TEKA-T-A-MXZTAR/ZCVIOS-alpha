@@ -1,7 +1,5 @@
 name: zcvios-ci
 
-# Root verification runs once for each pull-request head and may also be started manually.
-# Push-trigger duplication is intentionally avoided; stale runs for the same PR are cancelled.
 on:
   pull_request:
   workflow_dispatch:
@@ -26,16 +24,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22.18.0
-          cache: 'npm'
+          cache: npm
 
       - name: Setup Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
 
@@ -47,56 +45,8 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Verify repository hygiene
-        run: npm run verify:repository-hygiene
-
-      - name: Verify CI policy
-        run: npm run verify:ci-policy
-
-      - name: Verify toolchain policy
-        run: npm run verify:toolchain-policy
-
-      - name: Verify offline font policy
-        run: npm run verify:offline-fonts
-
-      - name: Verify core calculations
-        run: npx tsx scripts/verify-core-engine.ts
-
-      - name: Verify existing mission query
-        run: npx tsx scripts/verify-application-services.ts mission-existing-query
-
-      - name: Verify existing mission payload
-        run: npx tsx scripts/verify-application-services.ts mission-existing-payload
-
-      - name: Verify existing mission inactivity
-        run: npx tsx scripts/verify-application-services.ts mission-existing-inactivity
-
-      - name: Verify existing mission no-write behavior
-        run: npx tsx scripts/verify-application-services.ts mission-existing-no-write
-
-      - name: Verify existing mission no-generator behavior
-        run: npx tsx scripts/verify-application-services.ts mission-existing-no-generator
-
-      - name: Verify reset mission path
-        run: npx tsx scripts/verify-application-services.ts mission-reset
-
-      - name: Verify generated mission path
-        run: npx tsx scripts/verify-application-services.ts mission-generated
-
-      - name: Verify report application service
-        run: npx tsx scripts/verify-application-services.ts report
-
-      - name: Verify profile identity boundary
-        run: npx tsx scripts/verify-identity-boundary.ts profile
-
-      - name: Verify RPC route identity boundary
-        run: npx tsx scripts/verify-identity-boundary.ts routes
-
-      - name: Verify desktop and package boundaries
-        run: |
-          npm run verify:desktop-shell
-          npm run verify:desktop-persistence
-          npm run verify:linux-package-metadata
+      - name: Verify deterministic core and repository policy
+        run: npm run test:core
 
       - name: Generate Prisma client
         env:
