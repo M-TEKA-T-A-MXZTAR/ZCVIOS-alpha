@@ -37,16 +37,16 @@ The ledger is append-only in meaning:
 | Field | Value |
 |---|---|
 | Audited main | `bbf8c002dd9d63c5cbdd5c20786898409c012e8b` |
-| Latest merged milestone PR | #69 |
-| Current main merge commit | `fd399eabc761a235e76d7dab1fad56016981fef1` |
-| Active reliability PR | #70 — draft |
+| Latest merged milestone PR | #70 |
+| Current main merge commit | `8df4e0a1da67194e54f55e387f31fee9215501d4` |
+| Active reliability PR | #71 — draft |
 | Browser runtime | Operational alpha; reliability repair required |
 | Desktop runtime | M8.1 operator baseline implemented; parity incomplete |
 | Linux packaging | Debian/AppImage test-build capability |
 | Windows packaging | Planned |
 | macOS packaging | Planned |
 | Desktop AI | Planned; no provider runtime implemented |
-| Active critical path | P0.2 offline and reproducible root build |
+| Active critical path | P0.2 root CI policy and cost control |
 | Supported public release | None |
 
 ## Historical milestone register
@@ -68,6 +68,7 @@ The ledger is append-only in meaning:
 | #67 | Unreadable AI-key resilience | Optional-key failure now falls back to deterministic operation | Merged; CI passed |
 | #68 | Master build plan and progress ledger | Added audit, authoritative build order, ledger, and README links | Merged / P0.1 complete |
 | #69 | Repository hygiene and test isolation | Added portable Python discovery, generated-file enforcement, and disposable integration databases | Merged / P0.2A complete |
+| #70 | Offline-safe root typography | Removed Google font retrieval and added source verification | Merged / P0.2B implemented; network-disabled build proof pending |
 
 ## PR #67 evidence record
 
@@ -122,9 +123,9 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | AUD-014 | P1 | Root tests use a machine-specific Python path | Resolved by PR #69 | P0.2 |
 | AUD-015 | P1 | Ignore rules malformed; bytecode tracked | Resolved by PR #69 | P0.2 |
 | AUD-016 | P1 | Regression test mutates shared `dev.db` | Resolved by PR #69 | P0.2 |
-| AUD-017 | P2 | Root CI policy is costly and inconsistent | Proposed follow-up | P0.2 |
+| AUD-017 | P2 | Root CI policy is costly and inconsistent | Active in PR #71 | P0.2 |
 | AUD-018 | P2 | Toolchain and Prisma versions drift | Proposed | P0.2/P0.7 |
-| AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Active in PR #70 | P0.2 |
+| AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Implemented by PR #70; offline build proof pending | P0.2 |
 | AUD-020 | P1 | Currency and locale are not authoritative data | Decision required | P0.4 |
 | AUD-021 | P2 | Work logs are not full CRUD | Proposed | P0.7/P1.3 |
 | AUD-022 | P2 | Projection language risks predictive claims | Proposed | P0.3 |
@@ -151,7 +152,7 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | Order | Work item | Status | Exit condition |
 |---:|---|---|---|
 | 1 | P0.1 planning controls | Merged / complete | Audit, plan, ledger linked and merged |
-| 2 | P0.2 repository hygiene and reproducible verification | Active — PR #70 second bounded slice | Offline-safe root build, followed by separately bounded CI and toolchain work |
+| 2 | P0.2 repository hygiene and reproducible verification | Active — PR #71 third bounded slice | Cost-controlled root CI, followed by AUD-018 toolchain alignment and remaining offline-build evidence |
 | 3 | P0.3 metric correctness | Blocked by P0.2 | Zero/missing/focused metric fixtures pass |
 | 4 | P0.4 date/currency contracts | Blocked by P0.3 decisions | Date/time-zone/currency fixtures pass |
 | 5 | P0.5 route atomicity/errors | Blocked | Partial-failure and typed-error tests pass |
@@ -286,3 +287,25 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 - **Corrected statement:** No independent local-fixture execution was recorded. GitHub Actions `Build & Verify` on implementation head `a0c05e9ef8566c544be528591d6e6adfd955b1c6` successfully ran `npm run test:core`, including `verify:offline-fonts`, followed by lint and the production build.
 - **Reason / evidence:** Verification records must distinguish actual GitHub execution from unrecorded local claims.
 - **Effect on plan or status:** P0.2B remains Active. The source verifier and ordinary production build have CI evidence, while a production build with external network access disabled remains unverified.
+
+### LED-2026-07-02-012 — Offline font dependency slice merged
+
+- **Milestone / audit IDs:** P0.2B; AUD-019
+- **Status before:** PR #70 was active after a controlled drift audit and evidence correction
+- **Change:** PR #70 merged with the remote Google font helper removed, system-font stacks installed, and `verify:offline-fonts` included in core verification
+- **PR / commit:** #70 / `8df4e0a1da67194e54f55e387f31fee9215501d4`; final head `a3765f8d64d2dbbfc044e17334ed71abdd3d0fe3`
+- **Verification performed:** Dependency review, `zcvios-ci`, `zcvios-desktop-shell-ci`, and `zcvios-linux-package-ci` all completed successfully on the final head
+- **Status after:** P0.2B Merged / implemented; ordinary production build and static remote-font rejection verified
+- **Unresolved risk:** A genuinely network-disabled production build has not been performed, so AUD-019 is not classified Fully Verified
+- **Next allowed action:** Begin the separately bounded AUD-017 root CI policy and cost-control slice
+
+### LED-2026-07-02-013 — Root CI policy slice opened
+
+- **Milestone / audit IDs:** P0.2C; AUD-017
+- **Status before:** Root CI ran on both push and pull request, installed and built twice, lacked concurrency cancellation and job timeouts, and used movable action tags; dependency review also used movable action tags without a timeout
+- **Change:** Created `fix/root-ci-policy-cost-control`, consolidated root verification into one bounded job, retained separate disposable databases, removed duplicate push triggering, pinned root actions, added cancellation/timeouts, added `verify:ci-policy`, documented the policy, and opened draft PR #71
+- **PR / branch:** #71 / `fix/root-ci-policy-cost-control`
+- **Verification requested:** Revised root workflow must verify its own policy, run one build, execute integration tests against the isolated database, and pass dependency review without changing product behaviour
+- **Status after:** P0.2C Active / draft review
+- **Unresolved risk:** AUD-018 toolchain and Prisma alignment remains excluded; network-disabled build evidence for AUD-019 remains pending
+- **Next allowed action:** Inspect PR #71 checks and review findings; repair only CI-policy, verifier, or ledger defects before review readiness

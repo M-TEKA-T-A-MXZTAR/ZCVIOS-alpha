@@ -15,6 +15,7 @@ Current build work is governed by:
 - [State-of-System Audit — 2026-07-01](docs/STATE_OF_SYSTEM_AUDIT_2026-07-01.md) — audited baseline, confirmed defects, risks, and required decisions
 - [Master Build Plan](docs/MASTER_BUILD_PLAN.md) — authoritative implementation order and acceptance gates
 - [Progress Ledger](docs/PROGRESS_LEDGER.md) — append-only milestone, decision, defect, and verification record
+- [Continuous-Integration Policy](docs/CI_POLICY.md) — root verification, immutable-action, timeout, concurrency, and cost-control rules
 
 Older execution plans and work queues remain historical or specialist inputs. They do not override the Master Build Plan.
 
@@ -152,6 +153,7 @@ NEXTAUTH_URL=http://localhost:3000
 
 ```bash
 npm run verify:repository-hygiene  # Ignore rules and tracked generated files
+npm run verify:ci-policy           # Root CI trigger, timeout, action-pin, and cost policy
 npm run test:core                  # Deterministic and architecture checks
 npm run lint                       # ESLint
 npm run build                      # Production build
@@ -164,16 +166,18 @@ The `npm test` launcher discovers Python 3 through the optional `PYTHON` environ
 
 ## CI workflow
 
-The GitHub Actions workflow runs two jobs:
+Routine root verification runs once for each pull-request head, with optional manual dispatch. One bounded job installs dependencies once, verifies repository/core policy, prepares a disposable build database, lints, performs one production build, prepares a separate disposable integration database, starts the built application, and runs the portable integration suite.
 
-1. **Build & Verify** - Install, verify repository/core boundaries, migrate, seed, lint, and build against an isolated CI database
-2. **Integration Tests** - Build and run the application against a separate disposable database, then execute the portable `npm test` command
+Stale runs for the same pull request are cancelled. External actions are pinned to immutable commit SHAs. Dependency review remains a separate PR-only gate. Expensive desktop package workflows stay path-filtered and manually dispatchable.
+
+See [Continuous-Integration Policy](docs/CI_POLICY.md) for the authoritative workflow and cost-control rules.
 
 ## Documentation
 
 - [System Overview](docs/SYSTEM_OVERVIEW.md) - Architecture, components, and engine concepts
 - [Product Thesis](docs/PRODUCT_THESIS.md) - Core user, problem, and promise
 - [Architecture Principles](docs/ARCHITECTURE_PRINCIPLES.md) - Design principles for development
+- [Continuous-Integration Policy](docs/CI_POLICY.md) - Root checks, action pinning, concurrency, timeout, and cost-control policy
 - [Desktop Migration Plan](docs/DESKTOP_MIGRATION_PLAN.md) - Controlled browser-to-desktop migration sequence
 - [Desktop Feature-Parity Matrix](docs/DESKTOP_FEATURE_PARITY_MATRIX.md) - Capability evidence and migration gates
 - [Cross-Platform Desktop Requirements](docs/CROSS_PLATFORM_DESKTOP_REQUIREMENTS.md) - Linux, Windows, and macOS product requirements
