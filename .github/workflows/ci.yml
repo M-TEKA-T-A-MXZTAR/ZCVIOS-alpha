@@ -86,8 +86,11 @@ jobs:
       - name: Verify report application service
         run: npx tsx scripts/verify-application-services.ts report
 
-      - name: Verify identity boundary
-        run: npx tsx scripts/verify-identity-boundary.ts
+      - name: Verify profile identity boundary
+        run: npx tsx scripts/verify-identity-boundary.ts profile
+
+      - name: Verify RPC route identity boundary
+        run: npx tsx scripts/verify-identity-boundary.ts routes
 
       - name: Verify desktop and package boundaries
         run: |
