@@ -62,8 +62,20 @@ jobs:
       - name: Verify core calculations
         run: npx tsx scripts/verify-core-engine.ts
 
-      - name: Verify existing mission path
-        run: npx tsx scripts/verify-application-services.mjs mission-existing
+      - name: Verify existing mission query
+        run: npx tsx scripts/verify-application-services.mjs mission-existing-query
+
+      - name: Verify existing mission payload
+        run: npx tsx scripts/verify-application-services.mjs mission-existing-payload
+
+      - name: Verify existing mission inactivity
+        run: npx tsx scripts/verify-application-services.mjs mission-existing-inactivity
+
+      - name: Verify existing mission no-write behavior
+        run: npx tsx scripts/verify-application-services.mjs mission-existing-no-write
+
+      - name: Verify existing mission no-generator behavior
+        run: npx tsx scripts/verify-application-services.mjs mission-existing-no-generator
 
       - name: Verify reset mission path
         run: npx tsx scripts/verify-application-services.mjs mission-reset
