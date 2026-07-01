@@ -4,16 +4,18 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const rootCiPath = resolve(repositoryRoot, ".github", "workflows", "ci.yml");
-const dependencyReviewPath = resolve(
-  repositoryRoot,
-  ".github",
-  "workflows",
-  "dependency-review.yml",
-);
+const workflowsRoot = resolve(repositoryRoot, ".github", "workflows");
 
-const rootCi = readFileSync(rootCiPath, "utf8");
-const dependencyReview = readFileSync(dependencyReviewPath, "utf8");
+const workflowFiles = {
+  rootCi: resolve(workflowsRoot, "ci.yml"),
+  dependencyReview: resolve(workflowsRoot, "dependency-review.yml"),
+  desktopShell: resolve(workflowsRoot, "desktop-ci.yml"),
+  linuxPackages: resolve(workflowsRoot, "desktop-package-ci.yml"),
+};
+
+const workflows = Object.fromEntries(
+  Object.entries(workflowFiles).map(([key, path]) => [key, readFileSync(path, "utf8")]),
+);
 
 function countMatches(source, pattern) {
   return [...source.matchAll(pattern)].length;
@@ -33,16 +35,23 @@ function assertPinnedActions(source, label) {
   }
 }
 
-assert.match(rootCi, /^\s{2}pull_request:\s*$/m, "Root CI must run for pull requests.");
+function assertBoundedWorkflow(source, label) {
+  assert.match(source, /^\s{2}pull_request:\s*$/m, `${label} must run for pull requests.`);
+  assert.doesNotMatch(source, /^\s{2}push:\s*$/m, `${label} must not run duplicate push checks.`);
+  assert.match(source, /^concurrency:\s*$/m, `${label} must define concurrency control.`);
+  assert.match(
+    source,
+    /^\s{2}cancel-in-progress:\s*true\s*$/m,
+    `${label} must cancel stale runs for the same pull request.`,
+  );
+  assert.match(source, /^\s{4}timeout-minutes:\s*\d+\s*$/m, `${label} must be time-bounded.`);
+  assertPinnedActions(source, label);
+}
+
+const { rootCi, dependencyReview, desktopShell, linuxPackages } = workflows;
+
+assertBoundedWorkflow(rootCi, "Root CI");
 assert.match(rootCi, /^\s{2}workflow_dispatch:\s*$/m, "Root CI must allow manual dispatch.");
-assert.doesNotMatch(rootCi, /^\s{2}push:\s*$/m, "Root CI must not duplicate PR runs on push.");
-assert.match(rootCi, /^concurrency:\s*$/m, "Root CI must define concurrency control.");
-assert.match(
-  rootCi,
-  /^\s{2}cancel-in-progress:\s*true\s*$/m,
-  "Root CI must cancel stale runs for the same pull request.",
-);
-assert.match(rootCi, /^\s{4}timeout-minutes:\s*\d+\s*$/m, "Root CI jobs must be time-bounded.");
 assert.equal(countMatches(rootCi, /npm run build/g), 1, "Root CI must build the application exactly once.");
 assert.equal(countMatches(rootCi, /npm ci/g), 1, "Root CI must install npm dependencies exactly once.");
 assert.match(rootCi, /file:\.\/ci-build\.db/, "Root CI must retain a disposable build database.");
@@ -51,33 +60,23 @@ assert.match(
   /file:\.\/ci-integration\.db/,
   "Root CI must retain a separate disposable integration database.",
 );
-assertPinnedActions(rootCi, "Root CI");
 
+assertBoundedWorkflow(dependencyReview, "Dependency review");
 assert.match(
   dependencyReview,
-  /^\s{2}pull_request:\s*$/m,
-  "Dependency review must run for pull requests.",
+  /^\s{4}branches:\s*\["main"\]\s*$/m,
+  "Dependency review must target pull requests into main.",
 );
-assert.doesNotMatch(
-  dependencyReview,
-  /^\s{2}push:\s*$/m,
-  "Dependency review must not run duplicate push checks.",
-);
-assert.match(
-  dependencyReview,
-  /^concurrency:\s*$/m,
-  "Dependency review must define concurrency control.",
-);
-assert.match(
-  dependencyReview,
-  /^\s{2}cancel-in-progress:\s*true\s*$/m,
-  "Dependency review must cancel stale runs for the same pull request.",
-);
-assert.match(
-  dependencyReview,
-  /^\s{4}timeout-minutes:\s*\d+\s*$/m,
-  "Dependency review must be time-bounded.",
-);
-assertPinnedActions(dependencyReview, "Dependency review");
 
-console.log("PASS: root CI cost, concurrency, timeout, database, and action-pin policy verified.");
+for (const [source, label] of [
+  [desktopShell, "Desktop shell CI"],
+  [linuxPackages, "Linux package CI"],
+]) {
+  assertBoundedWorkflow(source, label);
+  assert.match(source, /^\s{2}workflow_dispatch:\s*$/m, `${label} must allow manual dispatch.`);
+  assert.match(source, /^\s{4}paths:\s*$/m, `${label} must remain path-filtered.`);
+}
+
+console.log(
+  "PASS: CI trigger, concurrency, timeout, action-pin, build-count, database, and expensive-workflow policy verified.",
+);
