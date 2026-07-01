@@ -66,27 +66,49 @@ const createMissionHarness = (contextOverrides = {}) => {
   };
 };
 
-const verifyExistingMission = async () => {
-  const { service, state } = createMissionHarness();
-  const result = await service.getOrCreateDailyMission({
+const getExistingMissionResult = async () => {
+  const harness = createMissionHarness();
+  const result = await harness.service.getOrCreateDailyMission({
     userId: "local-user",
     apiKey: null,
     today,
     weekStart,
   });
+  return { ...harness, result };
+};
+
+const verifyExistingQuery = async () => {
+  const { state } = await getExistingMissionResult();
   assert.equal(state.includeExistingMission, true, "Existing mission lookup must be enabled.");
+  console.log("PASS: existing mission query mode verified.");
+};
+
+const verifyExistingPayload = async () => {
+  const { result } = await getExistingMissionResult();
   assert.equal(result.mission.primaryTask, "Publish one offer.");
-  assert.equal(result.inactivityLevel, 1);
-  assert.equal(state.savedMission, null);
-  assert.equal(state.generatorCalls, 0);
-  console.log("PASS: existing mission application-service path verified.");
+  console.log("PASS: existing mission payload verified.");
+};
+
+const verifyExistingInactivity = async () => {
+  const { result } = await getExistingMissionResult();
+  assert.equal(result.inactivityLevel, 1, "One elapsed local calendar day must report inactivity 1.");
+  console.log("PASS: existing mission inactivity verified.");
+};
+
+const verifyExistingNoWrite = async () => {
+  const { state } = await getExistingMissionResult();
+  assert.equal(state.savedMission, null, "Existing mission lookup must not write a replacement.");
+  console.log("PASS: existing mission no-write behavior verified.");
+};
+
+const verifyExistingNoGenerator = async () => {
+  const { state } = await getExistingMissionResult();
+  assert.equal(state.generatorCalls, 0, "Existing mission lookup must not call the generator.");
+  console.log("PASS: existing mission no-generator behavior verified.");
 };
 
 const verifyResetMission = async () => {
-  const { service, state } = createMissionHarness({
-    existingMission: null,
-    lastPauseEnd: today,
-  });
+  const { service, state } = createMissionHarness({ existingMission: null, lastPauseEnd: today });
   const result = await service.getOrCreateDailyMission({
     userId: "local-user",
     apiKey: null,
@@ -170,7 +192,11 @@ const verifyReportService = async () => {
 };
 
 const verifiers = {
-  "mission-existing": verifyExistingMission,
+  "mission-existing-query": verifyExistingQuery,
+  "mission-existing-payload": verifyExistingPayload,
+  "mission-existing-inactivity": verifyExistingInactivity,
+  "mission-existing-no-write": verifyExistingNoWrite,
+  "mission-existing-no-generator": verifyExistingNoGenerator,
   "mission-reset": verifyResetMission,
   "mission-generated": verifyGeneratedMission,
   report: verifyReportService,
