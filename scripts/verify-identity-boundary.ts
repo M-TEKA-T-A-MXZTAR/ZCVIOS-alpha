@@ -3,34 +3,31 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveActiveProfile } from "../src/application/identity.ts";
 
-const browserProfile = {
-  id: "browser-user",
-  displayName: "Browser Operator",
-  email: "browser@example.test",
-  source: "browser-session",
+const verifyProfileResolution = async () => {
+  const browserProfile = {
+    id: "browser-user",
+    displayName: "Browser Operator",
+    email: "browser@example.test",
+    source: "browser-session" as const,
+  };
+  const localProfile = {
+    id: "local-owner",
+    displayName: "Local Operator",
+    email: null,
+    source: "local-profile" as const,
+  };
+
+  assert.deepEqual(
+    await resolveActiveProfile({ getActiveProfile: async () => browserProfile }),
+    browserProfile,
+  );
+  assert.deepEqual(
+    await resolveActiveProfile({ getActiveProfile: async () => localProfile }),
+    localProfile,
+  );
+  assert.equal(await resolveActiveProfile({ getActiveProfile: async () => null }), null);
+  console.log("PASS: active profile provider resolution verified.");
 };
-
-const localProfile = {
-  id: "local-owner",
-  displayName: "Local Operator",
-  email: null,
-  source: "local-profile",
-};
-
-assert.deepEqual(
-  await resolveActiveProfile({ getActiveProfile: async () => browserProfile }),
-  browserProfile,
-);
-assert.deepEqual(
-  await resolveActiveProfile({ getActiveProfile: async () => localProfile }),
-  localProfile,
-);
-assert.equal(
-  await resolveActiveProfile({ getActiveProfile: async () => null }),
-  null,
-);
-
-const routeRoot = path.resolve("src/app/rpc");
 
 const collectRouteFiles = async (directory: string): Promise<string[]> => {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -48,18 +45,28 @@ const collectRouteFiles = async (directory: string): Promise<string[]> => {
   return files;
 };
 
-for (const file of await collectRouteFiles(routeRoot)) {
-  const source = await readFile(file, "utf8");
-  assert.equal(
-    source.includes("requireSession"),
-    false,
-    `${path.relative(process.cwd(), file)} still imports the legacy session helper`,
-  );
-  assert.equal(
-    source.includes("session.user.id"),
-    false,
-    `${path.relative(process.cwd(), file)} still depends on the NextAuth session shape`,
-  );
-}
+const verifyRouteBoundary = async () => {
+  const routeRoot = path.resolve("src/app/rpc");
+  for (const file of await collectRouteFiles(routeRoot)) {
+    const source = await readFile(file, "utf8");
+    assert.equal(
+      source.includes("requireSession"),
+      false,
+      `${path.relative(process.cwd(), file)} still imports the legacy session helper`,
+    );
+    assert.equal(
+      source.includes("session.user.id"),
+      false,
+      `${path.relative(process.cwd(), file)} still depends on the NextAuth session shape`,
+    );
+  }
+  console.log("PASS: RPC route identity boundary verified.");
+};
 
-console.log("PASS: active profile identity boundary verified.");
+const mode = process.argv[2] ?? "all";
+
+if (mode === "all" || mode === "profile") await verifyProfileResolution();
+if (mode === "all" || mode === "routes") await verifyRouteBoundary();
+if (!["all", "profile", "routes"].includes(mode)) {
+  throw new Error(`Unknown identity-boundary verification mode: ${mode}`);
+}
