@@ -39,7 +39,14 @@ It is not manually dispatched because its comparison contract depends on pull-re
 
 ## Desktop and packaging workflows
 
-Desktop-shell and Linux package workflows remain separately bounded. Expensive package generation should stay path-filtered and manually dispatchable. Those workflows must not be folded into routine root verification merely to produce a broader green check.
+Desktop-shell and Linux package workflows remain separately bounded. They:
+
+- stay path-filtered
+- remain manually dispatchable
+- retain existing job timeouts and immutable action pins
+- cancel stale runs for the same pull request or manually selected ref
+
+Expensive package generation must not be folded into routine root verification merely to produce a broader green check.
 
 ## Action pinning
 
@@ -58,7 +65,7 @@ When updating an action:
 - no simultaneous push and pull-request trigger for the same routine root gate
 - no duplicate production build in one root workflow run without a recorded reason
 - no scheduled heavy package workflow unless explicitly approved
-- stale runs should be cancelled
+- stale runs must be cancelled for root, dependency-review, desktop-shell, and Linux-package workflows
 - every job must have a timeout
 - package artifacts must remain short-lived unless a release milestone requires otherwise
 - manual dispatch is preferred for expensive or exceptional verification
@@ -71,7 +78,7 @@ Run:
 npm run verify:ci-policy
 ```
 
-The verifier checks root trigger policy, concurrency cancellation, job timeouts, immutable action pins, one npm installation, one production build, and separate disposable build/integration databases.
+The verifier checks trigger policy, concurrency cancellation, job timeouts, immutable action pins, one npm installation, one root production build, separate disposable build/integration databases, and the path-filter/manual-dispatch boundaries for expensive desktop workflows.
 
 ## Exclusions
 
