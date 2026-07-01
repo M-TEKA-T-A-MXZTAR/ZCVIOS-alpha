@@ -65,8 +65,15 @@ const verifyRouteBoundary = async () => {
 
 const mode = process.argv[2] ?? "all";
 
-if (mode === "all" || mode === "profile") await verifyProfileResolution();
-if (mode === "all" || mode === "routes") await verifyRouteBoundary();
-if (!["all", "profile", "routes"].includes(mode)) {
-  throw new Error(`Unknown identity-boundary verification mode: ${mode}`);
-}
+const run = async () => {
+  if (mode === "all" || mode === "profile") await verifyProfileResolution();
+  if (mode === "all" || mode === "routes") await verifyRouteBoundary();
+  if (!["all", "profile", "routes"].includes(mode)) {
+    throw new Error(`Unknown identity-boundary verification mode: ${mode}`);
+  }
+};
+
+run().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
