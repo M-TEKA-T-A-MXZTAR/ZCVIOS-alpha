@@ -23,7 +23,7 @@
     "verify:desktop-shell": "node scripts/verify-desktop-shell.mjs",
     "verify:desktop-persistence": "node scripts/verify-desktop-persistence.mjs",
     "verify:linux-package-metadata": "node scripts/verify-linux-package-metadata.mjs",
-    "test:core": "npm run verify:repository-hygiene && npm run verify:ci-policy && npm run verify:toolchain-policy && npm run verify:offline-fonts && tsx scripts/verify-core-engine.ts && tsx scripts/verify-application-services.mjs && tsx scripts/verify-identity-boundary.mjs && npm run verify:desktop-shell && npm run verify:desktop-persistence && npm run verify:linux-package-metadata",
+    "test:core": "npm run verify:repository-hygiene && npm run verify:ci-policy && npm run verify:toolchain-policy && npm run verify:offline-fonts && tsx scripts/verify-core-engine.ts && tsx scripts/verify-application-services.ts && tsx scripts/verify-identity-boundary.ts && npm run verify:desktop-shell && npm run verify:desktop-persistence && npm run verify:linux-package-metadata",
     "test": "node scripts/run-pytest.mjs -q tests",
     "test:privacy": "node scripts/run-pytest.mjs -q tests/test_rpc_authenticated_flows.py -k export"
   },
