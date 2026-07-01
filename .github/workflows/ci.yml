@@ -47,8 +47,29 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Verify deterministic core and repository policy
-        run: npm run test:core
+      - name: Verify repository hygiene
+        run: npm run verify:repository-hygiene
+
+      - name: Verify CI policy
+        run: npm run verify:ci-policy
+
+      - name: Verify toolchain policy
+        run: npm run verify:toolchain-policy
+
+      - name: Verify offline font policy
+        run: npm run verify:offline-fonts
+
+      - name: Verify deterministic TypeScript core
+        run: |
+          npx tsx scripts/verify-core-engine.ts
+          npx tsx scripts/verify-application-services.mjs
+          npx tsx scripts/verify-identity-boundary.mjs
+
+      - name: Verify desktop and package boundaries
+        run: |
+          npm run verify:desktop-shell
+          npm run verify:desktop-persistence
+          npm run verify:linux-package-metadata
 
       - name: Generate Prisma client
         env:
