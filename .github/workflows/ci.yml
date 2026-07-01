@@ -59,11 +59,14 @@ jobs:
       - name: Verify offline font policy
         run: npm run verify:offline-fonts
 
-      - name: Verify deterministic TypeScript core
-        run: |
-          npx tsx scripts/verify-core-engine.ts
-          npx tsx scripts/verify-application-services.mjs
-          npx tsx scripts/verify-identity-boundary.mjs
+      - name: Verify core calculations
+        run: npx tsx scripts/verify-core-engine.ts
+
+      - name: Verify application services
+        run: npx tsx scripts/verify-application-services.mjs
+
+      - name: Verify identity boundary
+        run: npx tsx scripts/verify-identity-boundary.mjs
 
       - name: Verify desktop and package boundaries
         run: |
