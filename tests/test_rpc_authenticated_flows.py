@@ -175,6 +175,8 @@ def test_corrupted_openai_key_falls_back_without_breaking_core_routes(base_url: 
                     json={"confirmation": "DELETE"},
                     timeout=20,
                 )
+            except requests.RequestException:
+                pass
             finally:
                 session.close()
 

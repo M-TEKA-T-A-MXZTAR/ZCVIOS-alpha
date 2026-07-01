@@ -16,11 +16,29 @@ assert.equal(
 
 for (const requiredRule of [
   "node_modules/",
+  ".next/",
+  "build/",
+  "dist/",
+  "out/",
+  "coverage/",
+  "desktop/dist/",
   "desktop/src-tauri/target/",
   "__pycache__/",
   "*.py[cod]",
   ".pytest_cache/",
+  "htmlcov/",
   "*.db",
+  "*.db-journal",
+  "*.db-shm",
+  "*.db-wal",
+  "*.sqlite",
+  "*.sqlite-journal",
+  "*.sqlite-shm",
+  "*.sqlite-wal",
+  "*.sqlite3",
+  "*.sqlite3-journal",
+  "*.sqlite3-shm",
+  "*.sqlite3-wal",
 ]) {
   assert.ok(ignoreLines.includes(requiredRule), `.gitignore must include ${requiredRule}`);
 }
@@ -38,24 +56,50 @@ if (trackedResult.error || trackedResult.status !== 0) {
 }
 
 const trackedFiles = trackedResult.stdout.split("\0").filter(Boolean);
+
+const escapeForRegExp = (value) => value.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
+const pathSegmentPattern = (segment) => new RegExp(`(^|/)${escapeForRegExp(segment)}/`);
+const fileExtensionPattern = (extension) => new RegExp(`${escapeForRegExp(extension)}$`);
+
 const forbiddenTrackedPatterns = [
-  /(^|\/)__pycache__\//,
-  /\.py[co]$/,
-  /(^|\/)\.pytest_cache\//,
-  /(^|\/)node_modules\//,
-  /^\.next\//,
-  /^desktop\/dist\//,
-  /^desktop\/src-tauri\/target\//,
+  pathSegmentPattern("__pycache__"),
+  fileExtensionPattern(".pyc"),
+  fileExtensionPattern(".pyo"),
+  fileExtensionPattern(".pyd"),
+  pathSegmentPattern(".pytest_cache"),
+  pathSegmentPattern("node_modules"),
+  pathSegmentPattern(".next"),
+  pathSegmentPattern("build"),
+  pathSegmentPattern("dist"),
+  pathSegmentPattern("out"),
+  pathSegmentPattern("coverage"),
+  pathSegmentPattern("htmlcov"),
+  pathSegmentPattern("desktop/dist"),
+  pathSegmentPattern("desktop/src-tauri/target"),
+  fileExtensionPattern(".db"),
+  fileExtensionPattern(".db-journal"),
+  fileExtensionPattern(".db-shm"),
+  fileExtensionPattern(".db-wal"),
+  fileExtensionPattern(".sqlite"),
+  fileExtensionPattern(".sqlite-journal"),
+  fileExtensionPattern(".sqlite-shm"),
+  fileExtensionPattern(".sqlite-wal"),
+  fileExtensionPattern(".sqlite3"),
+  fileExtensionPattern(".sqlite3-journal"),
+  fileExtensionPattern(".sqlite3-shm"),
+  fileExtensionPattern(".sqlite3-wal"),
 ];
 
 const forbiddenTrackedFiles = trackedFiles.filter((file) =>
   forbiddenTrackedPatterns.some((pattern) => pattern.test(file)),
 );
 
-assert.deepEqual(
-  forbiddenTrackedFiles,
-  [],
-  `Generated files must not be tracked:\n${forbiddenTrackedFiles.join("\n")}`,
-);
+if (forbiddenTrackedFiles.length > 0) {
+  console.error("Generated files must not be tracked:");
+  for (const file of forbiddenTrackedFiles) {
+    console.error(`- ${file}`);
+  }
+  process.exit(1);
+}
 
 console.log("PASS: repository ignore rules and tracked-file hygiene verified.");

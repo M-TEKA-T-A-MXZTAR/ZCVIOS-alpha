@@ -15,12 +15,17 @@ const candidates = requestedPython
       ];
 
 const pytestArguments = process.argv.slice(2);
+const python3Probe = [
+  "-c",
+  "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 1)",
+];
 
 const selected = candidates.find(({ command, prefix }) => {
-  const probe = spawnSync(command, [...prefix, "--version"], {
+  const probe = spawnSync(command, [...prefix, ...python3Probe], {
     stdio: "ignore",
     shell: false,
   });
+
   return !probe.error && probe.status === 0;
 });
 

@@ -83,11 +83,21 @@ src/app/
 npm install
 ```
 
-2. Create local environment file
+2. Create local Prisma environment file
+
+Linux/macOS:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Prisma CLI loads the repository-root `.env`, and `.env` remains ignored by Git. If you explicitly export `DATABASE_URL`, that value still overrides the local default from `.env`. CI continues to use disposable `ci-build.db` and `ci-integration.db` values. `.env.local` may still be used only for a separately documented Next.js-specific override; it is not the Prisma configuration file.
 
 3. Generate Prisma client
 
@@ -122,7 +132,7 @@ Open: `http://localhost:3000`
 
 ## Environment variables
 
-Defined in `.env.example`:
+Defined in `.env.example` and normally copied to the repository-root `.env` for local Prisma commands:
 
 ```env
 DATABASE_URL=file:./dev.db
