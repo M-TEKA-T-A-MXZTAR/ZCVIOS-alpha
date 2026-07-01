@@ -77,6 +77,7 @@ const missionService = createMissionService({
   generator: missionGenerator,
 });
 
+const readSavedMission = (): MissionRecord | null => missionState.savedMission;
 type WeeklyQuery = Parameters<ReportRepository["getWeeklyReportSnapshot"]>[0];
 
 const run = async () => {
@@ -89,7 +90,7 @@ const run = async () => {
   assert.equal(missionState.includeExistingMission, true);
   assert.equal(existingResult.mission.primaryTask, "Publish one offer.");
   assert.equal(existingResult.inactivityLevel, 1);
-  assert.equal(missionState.savedMission, null);
+  assert.equal(readSavedMission(), null);
   assert.equal(missionState.generatorCalls, 0);
 
   missionContext = {
@@ -104,7 +105,7 @@ const run = async () => {
     weekStart,
   });
   assert.equal(resetResult.mission.source, "RESET");
-  assert.equal(missionState.savedMission?.source, "RESET");
+  assert.equal(readSavedMission()?.source, "RESET");
   assert.equal(missionState.generatorCalls, 0);
 
   missionState.savedMission = null;
@@ -123,7 +124,7 @@ const run = async () => {
   assert.equal(missionState.includeExistingMission, false);
   assert.equal(generatedResult.mission.primaryTask, "Publish an AI-assisted offer.");
   assert.equal(generatedResult.mission.canUseAi, true);
-  assert.equal(missionState.savedMission?.source, "AI");
+  assert.equal(readSavedMission()?.source, "AI");
   assert.equal(missionState.generatorCalls, 1);
 
   const firstWeek = new Date(2026, 5, 1);
