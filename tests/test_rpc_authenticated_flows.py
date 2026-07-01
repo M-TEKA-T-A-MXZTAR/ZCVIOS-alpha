@@ -54,12 +54,24 @@ def login_session(base_url: str, email: str, password: str) -> requests.Session:
     return session
 
 
-def _repository_db_path() -> Path:
-    return Path(__file__).resolve().parents[1] / "dev.db"
+def _test_database_path() -> Path:
+    configured_path = os.environ.get("ZCVIOS_TEST_DATABASE_PATH")
+    assert configured_path, (
+        "ZCVIOS_TEST_DATABASE_PATH is required for tests that deliberately modify stored data. "
+        "Point it at the same disposable SQLite database used by the running test application."
+    )
+
+    path = Path(configured_path).expanduser()
+    path = path.resolve() if path.is_absolute() else (Path.cwd() / path).resolve()
+    repository_dev_db = (Path(__file__).resolve().parents[1] / "dev.db").resolve()
+
+    assert path != repository_dev_db, "Refusing to modify the repository development database."
+    assert path.exists(), f"Configured test database does not exist: {path}"
+    return path
 
 
 def _set_openai_key_ciphertext(email: str, ciphertext: str | None, last4: str | None):
-    with sqlite3.connect(_repository_db_path()) as connection:
+    with sqlite3.connect(_test_database_path()) as connection:
         cursor = connection.execute(
             'UPDATE "User" SET "openAiApiKeyEncrypted" = ?, "openAiKeyLast4" = ? WHERE "email" = ?',
             (ciphertext, last4, email),
@@ -115,44 +127,58 @@ def test_authenticated_revenue_save_with_signals(base_url: str, auth_client: req
 def test_corrupted_openai_key_falls_back_without_breaking_core_routes(base_url: str):
     email = f"qa.corrupt-key.{int(time.time())}@zcvios.local"
     password = "CorruptKeyPass123!"
+    session: requests.Session | None = None
 
-    register_response = requests.post(
-        f"{base_url}/rpc/register",
-        json={"name": "QA Corrupt Key", "email": email, "password": password},
-        timeout=20,
-    )
-    assert register_response.status_code == 200
+    try:
+        register_response = requests.post(
+            f"{base_url}/rpc/register",
+            json={"name": "QA Corrupt Key", "email": email, "password": password},
+            timeout=20,
+        )
+        assert register_response.status_code == 200
 
-    session = login_session(base_url, email, password)
-    _set_openai_key_ciphertext(email, CORRUPTED_OPENAI_KEY_CIPHERTEXT, CORRUPTED_OPENAI_KEY_LAST4)
+        session = login_session(base_url, email, password)
+        _set_openai_key_ciphertext(email, CORRUPTED_OPENAI_KEY_CIPHERTEXT, CORRUPTED_OPENAI_KEY_LAST4)
 
-    mission_response = session.get(f"{base_url}/rpc/mission", timeout=20)
-    assert mission_response.status_code == 200
-    mission_data = mission_response.json()
-    assert "mission" in mission_data
+        mission_response = session.get(f"{base_url}/rpc/mission", timeout=20)
+        assert mission_response.status_code == 200
+        mission_data = mission_response.json()
+        assert "mission" in mission_data
 
-    regenerate_response = session.post(f"{base_url}/rpc/mission", timeout=20)
-    assert regenerate_response.status_code == 200
-    assert "mission" in regenerate_response.json()
+        regenerate_response = session.post(f"{base_url}/rpc/mission", timeout=20)
+        assert regenerate_response.status_code == 200
+        assert "mission" in regenerate_response.json()
 
-    revenue_response = session.post(
-        f"{base_url}/rpc/revenue",
-        json={
-            "weekStart": date.today().isoformat(),
-            "revenue": 3210,
-            "note": "pytest-corrupt-openai-key",
-            "trafficSessions": 90,
-            "leadsGenerated": 10,
-            "closedSales": 3,
-            "churnedCustomers": 0,
-            "grossMarginPct": 42,
-        },
-        timeout=20,
-    )
-    assert revenue_response.status_code == 200
-    revenue_data = revenue_response.json()
-    assert revenue_data["ok"] is True
-    assert revenue_data["signals"]["trafficSessions"] == 90
+        revenue_response = session.post(
+            f"{base_url}/rpc/revenue",
+            json={
+                "weekStart": date.today().isoformat(),
+                "revenue": 3210,
+                "note": "pytest-corrupt-openai-key",
+                "trafficSessions": 90,
+                "leadsGenerated": 10,
+                "closedSales": 3,
+                "churnedCustomers": 0,
+                "grossMarginPct": 42,
+            },
+            timeout=20,
+        )
+        assert revenue_response.status_code == 200
+        revenue_data = revenue_response.json()
+        assert revenue_data["ok"] is True
+        assert revenue_data["signals"]["trafficSessions"] == 90
+    finally:
+        if session is not None:
+            try:
+                session.delete(
+                    f"{base_url}/rpc/data-delete",
+                    json={"confirmation": "DELETE"},
+                    timeout=20,
+                )
+            except requests.RequestException:
+                pass
+            finally:
+                session.close()
 
 
 def test_future_dated_log_is_rejected(base_url: str, auth_client: requests.Session):
