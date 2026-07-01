@@ -279,3 +279,10 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 - **Status after:** P0.2B Active / draft review
 - **Unresolved risk:** Full repository hygiene, core, lint, and production-build checks remain pending; a production build without external network access has not yet been proven
 - **Next allowed action:** Inspect PR #70 checks and review findings, repair only AUD-019 or ledger defects, and do not claim offline-build verification unless it is actually performed
+
+### COR-2026-07-02-011 — Correction to LED-2026-07-02-010
+
+- **Original statement:** The new static checker was verified against an isolated local fixture.
+- **Corrected statement:** No independent local-fixture execution was recorded. GitHub Actions `Build & Verify` on implementation head `a0c05e9ef8566c544be528591d6e6adfd955b1c6` successfully ran `npm run test:core`, including `verify:offline-fonts`, followed by lint and the production build.
+- **Reason / evidence:** Verification records must distinguish actual GitHub execution from unrecorded local claims.
+- **Effect on plan or status:** P0.2B remains Active. The source verifier and ordinary production build have CI evidence, while a production build with external network access disabled remains unverified.
