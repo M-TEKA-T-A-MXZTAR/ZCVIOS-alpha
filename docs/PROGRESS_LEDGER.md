@@ -37,16 +37,16 @@ The ledger is append-only in meaning:
 | Field | Value |
 |---|---|
 | Audited main | `bbf8c002dd9d63c5cbdd5c20786898409c012e8b` |
-| Latest merged milestone PR | #68 |
-| Current main merge commit | `438a82a48490651d5d4e7f7e54039e81b72c6d7e` |
-| Active reliability PR | #69 — draft |
+| Latest merged milestone PR | #69 |
+| Current main merge commit | `fd399eabc761a235e76d7dab1fad56016981fef1` |
+| Active reliability PR | #70 — draft |
 | Browser runtime | Operational alpha; reliability repair required |
 | Desktop runtime | M8.1 operator baseline implemented; parity incomplete |
 | Linux packaging | Debian/AppImage test-build capability |
 | Windows packaging | Planned |
 | macOS packaging | Planned |
 | Desktop AI | Planned; no provider runtime implemented |
-| Active critical path | P0.2 repository hygiene and reproducible verification |
+| Active critical path | P0.2 offline and reproducible root build |
 | Supported public release | None |
 
 ## Historical milestone register
@@ -67,6 +67,7 @@ The ledger is append-only in meaning:
 | #66 | Three-platform requirements | Defined Linux, Windows, and macOS product gates | Merged / Planned architecture |
 | #67 | Unreadable AI-key resilience | Optional-key failure now falls back to deterministic operation | Merged; CI passed |
 | #68 | Master build plan and progress ledger | Added audit, authoritative build order, ledger, and README links | Merged / P0.1 complete |
+| #69 | Repository hygiene and test isolation | Added portable Python discovery, generated-file enforcement, and disposable integration databases | Merged / P0.2A complete |
 
 ## PR #67 evidence record
 
@@ -118,12 +119,12 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | AUD-011 | P1 | Multiple plans claim authority | Resolved by PR #68 | P0.1 |
 | AUD-012 | P1 | Browser/desktop authority is unclear | Partially resolved by PR #68 | P0.1/P0.7 |
 | AUD-013 | P2 | Product/package versions conflict | Proposed | P0.7 |
-| AUD-014 | P1 | Root tests use a machine-specific Python path | Active in PR #69 | P0.2 |
-| AUD-015 | P1 | Ignore rules malformed; bytecode tracked | Active in PR #69 | P0.2 |
-| AUD-016 | P1 | Regression test mutates shared `dev.db` | Active in PR #69 | P0.2 |
+| AUD-014 | P1 | Root tests use a machine-specific Python path | Resolved by PR #69 | P0.2 |
+| AUD-015 | P1 | Ignore rules malformed; bytecode tracked | Resolved by PR #69 | P0.2 |
+| AUD-016 | P1 | Regression test mutates shared `dev.db` | Resolved by PR #69 | P0.2 |
 | AUD-017 | P2 | Root CI policy is costly and inconsistent | Proposed follow-up | P0.2 |
 | AUD-018 | P2 | Toolchain and Prisma versions drift | Proposed | P0.2/P0.7 |
-| AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Proposed follow-up | P0.2 |
+| AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Active in PR #70 | P0.2 |
 | AUD-020 | P1 | Currency and locale are not authoritative data | Decision required | P0.4 |
 | AUD-021 | P2 | Work logs are not full CRUD | Proposed | P0.7/P1.3 |
 | AUD-022 | P2 | Projection language risks predictive claims | Proposed | P0.3 |
@@ -150,7 +151,7 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | Order | Work item | Status | Exit condition |
 |---:|---|---|---|
 | 1 | P0.1 planning controls | Merged / complete | Audit, plan, ledger linked and merged |
-| 2 | P0.2 repository hygiene | Active — PR #69 first slice | Portable tests, isolated DB, clean generated-file state |
+| 2 | P0.2 repository hygiene and reproducible verification | Active — PR #70 second bounded slice | Offline-safe root build, followed by separately bounded CI and toolchain work |
 | 3 | P0.3 metric correctness | Blocked by P0.2 | Zero/missing/focused metric fixtures pass |
 | 4 | P0.4 date/currency contracts | Blocked by P0.3 decisions | Date/time-zone/currency fixtures pass |
 | 5 | P0.5 route atomicity/errors | Blocked | Partial-failure and typed-error tests pass |
@@ -256,3 +257,32 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 - **Status after:** PR #69 remains unmerged and pending verification after the accepted review repairs
 - **Unresolved risk:** Final local verification and post-fix review evidence still required before merge readiness can be claimed
 - **Next allowed action:** Apply the narrow repairs, rerun required verification, and report the resulting evidence without widening scope
+
+### LED-2026-07-02-009 — Repository hygiene slice merged
+
+- **Milestone / audit IDs:** P0.2A; AUD-014, AUD-015, AUD-016
+- **Status before:** PR #69 remained pending after accepted review repairs
+- **Change:** The narrow review repairs were completed and PR #69 merged without widening the repository-hygiene and test-isolation scope
+- **PR / commit:** #69 / `fd399eabc761a235e76d7dab1fad56016981fef1`; final head `843c1c9058cd1d7c392ee23513611fe523965f9e`
+- **Verification performed:** Dependency review, `zcvios-desktop-shell-ci`, `zcvios-ci`, and `zcvios-linux-package-ci` all completed successfully on the final PR head
+- **Status after:** P0.2A Merged / complete; AUD-014, AUD-015, and AUD-016 resolved
+- **Unresolved risk:** AUD-019, AUD-017, and AUD-018 remain separate bounded P0.2 follow-ups
+- **Next allowed action:** Begin P0.2B offline and reproducible root-build work for AUD-019
+
+### LED-2026-07-02-010 — Offline and reproducible root-build slice opened
+
+- **Milestone / audit IDs:** P0.2B; AUD-019
+- **Status before:** PR #69 is merged; the browser root still imports Google-hosted fonts through `next/font/google`; the current checkpoint had not yet recorded the PR #69 merge
+- **Change:** Created `fix/offline-reproducible-root-build`, removed the remote font helper, introduced system-font stacks, added focused static verification, and opened draft PR #70
+- **PR / branch:** #70 / `fix/offline-reproducible-root-build`
+- **Verification performed:** Confirmed `main` equals PR #69 merge commit; confirmed no open PR preceded #70; verified the new static checker against an isolated local fixture; branch diff remained within root typography, verification wiring, and this ledger
+- **Status after:** P0.2B Active / draft review
+- **Unresolved risk:** Full repository hygiene, core, lint, and production-build checks remain pending; a production build without external network access has not yet been proven
+- **Next allowed action:** Inspect PR #70 checks and review findings, repair only AUD-019 or ledger defects, and do not claim offline-build verification unless it is actually performed
+
+### COR-2026-07-02-011 — Correction to LED-2026-07-02-010
+
+- **Original statement:** The new static checker was verified against an isolated local fixture.
+- **Corrected statement:** No independent local-fixture execution was recorded. GitHub Actions `Build & Verify` on implementation head `a0c05e9ef8566c544be528591d6e6adfd955b1c6` successfully ran `npm run test:core`, including `verify:offline-fonts`, followed by lint and the production build.
+- **Reason / evidence:** Verification records must distinguish actual GitHub execution from unrecorded local claims.
+- **Effect on plan or status:** P0.2B remains Active. The source verifier and ordinary production build have CI evidence, while a production build with external network access disabled remains unverified.
