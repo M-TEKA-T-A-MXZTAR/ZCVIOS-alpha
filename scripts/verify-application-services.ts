@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
-import { createMissionService } from "../src/application/mission-service.ts";
+import { createMissionService } from "../src/application/mission-service";
 import type {
   MissionContextQuery,
   MissionContextSnapshot,
   MissionGenerator,
   MissionRepository,
   ReportRepository,
-} from "../src/application/ports.ts";
-import { createReportService } from "../src/application/report-service.ts";
-import type { Lever, MissionRecord } from "../src/core/domain.ts";
+} from "../src/application/ports";
+import { createReportService } from "../src/application/report-service";
+import type { Lever, MissionRecord } from "../src/core/domain";
 
 const today = new Date(2026, 5, 30);
 const weekStart = new Date(2026, 5, 29);
