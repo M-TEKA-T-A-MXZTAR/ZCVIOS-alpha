@@ -1,5 +1,5 @@
-import type { ReportRepository } from "@/application/ports";
-import { calculateMonthlyReport, calculateWeeklyReport } from "@/core/reports";
+import type { ReportRepository } from "./ports";
+import { calculateMonthlyReport, calculateWeeklyReport } from "../core/reports";
 
 const startOfDay = (date: Date) => {
   const value = new Date(date);

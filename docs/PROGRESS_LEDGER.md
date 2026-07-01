@@ -37,16 +37,16 @@ The ledger is append-only in meaning:
 | Field | Value |
 |---|---|
 | Audited main | `bbf8c002dd9d63c5cbdd5c20786898409c012e8b` |
-| Latest merged milestone PR | #70 |
-| Current main merge commit | `8df4e0a1da67194e54f55e387f31fee9215501d4` |
-| Active reliability PR | #71 — draft |
+| Latest merged milestone PR | #71 |
+| Current main merge commit | `d24f22bb29c0fc1441eb984102e122a73794e70b` |
+| Active reliability PR | #72 — draft |
 | Browser runtime | Operational alpha; reliability repair required |
 | Desktop runtime | M8.1 operator baseline implemented; parity incomplete |
 | Linux packaging | Debian/AppImage test-build capability |
 | Windows packaging | Planned |
 | macOS packaging | Planned |
 | Desktop AI | Planned; no provider runtime implemented |
-| Active critical path | P0.2 root CI policy and cost control |
+| Active critical path | P0.2 shared Node and React alignment |
 | Supported public release | None |
 
 ## Historical milestone register
@@ -69,6 +69,7 @@ The ledger is append-only in meaning:
 | #68 | Master build plan and progress ledger | Added audit, authoritative build order, ledger, and README links | Merged / P0.1 complete |
 | #69 | Repository hygiene and test isolation | Added portable Python discovery, generated-file enforcement, and disposable integration databases | Merged / P0.2A complete |
 | #70 | Offline-safe root typography | Removed Google font retrieval and added source verification | Merged / P0.2B implemented; network-disabled build proof pending |
+| #71 | CI policy and cost control | Consolidated root CI, pinned actions, bounded jobs, and cancelled stale runs | Merged / P0.2C complete |
 
 ## PR #67 evidence record
 
@@ -123,8 +124,8 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | AUD-014 | P1 | Root tests use a machine-specific Python path | Resolved by PR #69 | P0.2 |
 | AUD-015 | P1 | Ignore rules malformed; bytecode tracked | Resolved by PR #69 | P0.2 |
 | AUD-016 | P1 | Regression test mutates shared `dev.db` | Resolved by PR #69 | P0.2 |
-| AUD-017 | P2 | Root CI policy is costly and inconsistent | Active in PR #71 | P0.2 |
-| AUD-018 | P2 | Toolchain and Prisma versions drift | Proposed | P0.2/P0.7 |
+| AUD-017 | P2 | Root CI policy is costly and inconsistent | Resolved by PR #71 | P0.2 |
+| AUD-018 | P2 | Toolchain and Prisma versions drift | Active in PR #72; Prisma/desktop lockfile follow-up remains | P0.2/P0.7 |
 | AUD-019 | P2 | Remote fonts weaken reproducible/offline builds | Implemented by PR #70; offline build proof pending | P0.2 |
 | AUD-020 | P1 | Currency and locale are not authoritative data | Decision required | P0.4 |
 | AUD-021 | P2 | Work logs are not full CRUD | Proposed | P0.7/P1.3 |
@@ -152,7 +153,7 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 | Order | Work item | Status | Exit condition |
 |---:|---|---|---|
 | 1 | P0.1 planning controls | Merged / complete | Audit, plan, ledger linked and merged |
-| 2 | P0.2 repository hygiene and reproducible verification | Active — PR #71 third bounded slice | Cost-controlled root CI, followed by AUD-018 toolchain alignment and remaining offline-build evidence |
+| 2 | P0.2 repository hygiene and reproducible verification | Active — PR #72 fourth bounded slice | Shared Node/React alignment, followed by Prisma/desktop lockfile alignment and remaining offline-build evidence |
 | 3 | P0.3 metric correctness | Blocked by P0.2 | Zero/missing/focused metric fixtures pass |
 | 4 | P0.4 date/currency contracts | Blocked by P0.3 decisions | Date/time-zone/currency fixtures pass |
 | 5 | P0.5 route atomicity/errors | Blocked | Partial-failure and typed-error tests pass |
@@ -309,3 +310,25 @@ Full analysis: [State-of-System Audit — 2026-07-01](STATE_OF_SYSTEM_AUDIT_2026
 - **Status after:** P0.2C Active / draft review
 - **Unresolved risk:** AUD-018 toolchain and Prisma alignment remains excluded; network-disabled build evidence for AUD-019 remains pending
 - **Next allowed action:** Inspect PR #71 checks and review findings; repair only CI-policy, verifier, or ledger defects before review readiness
+
+### LED-2026-07-02-014 — CI policy slice merged
+
+- **Milestone / audit IDs:** P0.2C; AUD-017
+- **Status before:** PR #71 remained active after a false-positive review finding was assessed and dismissed using executable CI evidence
+- **Change:** PR #71 merged with one bounded root workflow, immutable action pins, least-privilege permissions, timeouts, concurrency cancellation, and documented CI policy
+- **PR / commit:** #71 / `d24f22bb29c0fc1441eb984102e122a73794e70b`; final head `2c1a4d0c4020e8b3e47a2097614c2b8b812dedaf`
+- **Verification performed:** Dependency review, `zcvios-ci`, `zcvios-desktop-shell-ci`, and `zcvios-linux-package-ci` all completed successfully on the final head; `main` was confirmed identical to the merge commit
+- **Status after:** P0.2C Merged / complete; AUD-017 resolved
+- **Unresolved risk:** AUD-018 and network-disabled build evidence for AUD-019 remain open
+- **Next allowed action:** Begin a bounded AUD-018 toolchain-alignment slice
+
+### LED-2026-07-02-015 — Shared Node and React alignment slice opened
+
+- **Milestone / audit IDs:** P0.2D1; AUD-018
+- **Status before:** Root CI used Node 20 while desktop workflows used an unpinned Node 22 major; root and desktop React patch versions differed; no shared toolchain policy or verifier existed
+- **Change:** Created `fix/toolchain-version-alignment`, pinned `.nvmrc` and all affected workflows to Node 22.18.0, declared matching Node/npm engine ranges, aligned root and desktop React/react-dom at 19.2.3, added `verify:toolchain-policy`, documented the compatibility boundary, and opened draft PR #72
+- **PR / branch:** #72 / `fix/toolchain-version-alignment`
+- **Verification requested:** Root core/build/integration checks and unchanged desktop/package checks must pass on Node 22.18.0; the focused verifier must confirm workflow, engine, `.nvmrc`, React, and root-lock metadata alignment
+- **Status after:** P0.2D1 Active / draft review
+- **Unresolved risk:** Prisma CLI/client/adapter versions remain misaligned; no reviewed desktop lockfile exists; a network-disabled production build remains unverified
+- **Next allowed action:** Inspect PR #72 checks and review findings; repair only Node/React policy, documentation, or verifier defects before review readiness

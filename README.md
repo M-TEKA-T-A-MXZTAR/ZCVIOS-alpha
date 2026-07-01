@@ -16,6 +16,7 @@ Current build work is governed by:
 - [Master Build Plan](docs/MASTER_BUILD_PLAN.md) — authoritative implementation order and acceptance gates
 - [Progress Ledger](docs/PROGRESS_LEDGER.md) — append-only milestone, decision, defect, and verification record
 - [Continuous-Integration Policy](docs/CI_POLICY.md) — root verification, immutable-action, timeout, concurrency, and cost-control rules
+- [Toolchain Compatibility Policy](docs/TOOLCHAIN_POLICY.md) — supported Node/npm baseline, shared React versions, and remaining dependency-alignment boundary
 
 Older execution plans and work queues remain historical or specialist inputs. They do not override the Master Build Plan.
 
@@ -78,13 +79,21 @@ src/app/
 
 ## Local setup
 
-1. Install dependencies
+1. Use the supported Node runtime
 
 ```bash
-npm install
+nvm use
 ```
 
-2. Create local Prisma environment file
+The repository pins Node `22.18.0` in `.nvmrc`. Equivalent version-manager or native installations may be used, but the active Node version must satisfy `>=22.18.0 <23` and npm must satisfy `>=10 <11`.
+
+2. Install dependencies from the root lockfile
+
+```bash
+npm ci
+```
+
+3. Create local Prisma environment file
 
 Linux/macOS:
 
@@ -100,25 +109,25 @@ Copy-Item .env.example .env
 
 Prisma CLI loads the repository-root `.env`, and `.env` remains ignored by Git. If you explicitly export `DATABASE_URL`, that value still overrides the local default from `.env`. CI continues to use disposable `ci-build.db` and `ci-integration.db` values. `.env.local` may still be used only for a separately documented Next.js-specific override; it is not the Prisma configuration file.
 
-3. Generate Prisma client
+4. Generate Prisma client
 
 ```bash
 npm run prisma:generate
 ```
 
-4. Run database migrations
+5. Run database migrations
 
 ```bash
 npx prisma migrate deploy
 ```
 
-5. Seed demo data
+6. Seed demo data
 
 ```bash
 npm run seed
 ```
 
-6. Start development server
+7. Start development server
 
 ```bash
 npm run dev
@@ -154,6 +163,7 @@ NEXTAUTH_URL=http://localhost:3000
 ```bash
 npm run verify:repository-hygiene  # Ignore rules and tracked generated files
 npm run verify:ci-policy           # Root CI trigger, timeout, action-pin, and cost policy
+npm run verify:toolchain-policy    # Shared Node and React version policy
 npm run test:core                  # Deterministic and architecture checks
 npm run lint                       # ESLint
 npm run build                      # Production build
@@ -168,9 +178,9 @@ The `npm test` launcher discovers Python 3 through the optional `PYTHON` environ
 
 Routine root verification runs once for each pull-request head, with optional manual dispatch. One bounded job installs dependencies once, verifies repository/core policy, prepares a disposable build database, lints, performs one production build, prepares a separate disposable integration database, starts the built application, and runs the portable integration suite.
 
-Stale runs for the same pull request are cancelled. External actions are pinned to immutable commit SHAs. Dependency review remains a separate PR-only gate. Expensive desktop package workflows stay path-filtered and manually dispatchable.
+Root, desktop-shell, and Linux-package workflows use Node `22.18.0`. Stale runs for the same pull request are cancelled. External actions are pinned to immutable commit SHAs. Dependency review remains a separate PR-only gate. Expensive desktop package workflows stay path-filtered and manually dispatchable.
 
-See [Continuous-Integration Policy](docs/CI_POLICY.md) for the authoritative workflow and cost-control rules.
+See [Continuous-Integration Policy](docs/CI_POLICY.md) and [Toolchain Compatibility Policy](docs/TOOLCHAIN_POLICY.md) for the authoritative workflow, cost-control, and runtime-version rules.
 
 ## Documentation
 
@@ -178,6 +188,7 @@ See [Continuous-Integration Policy](docs/CI_POLICY.md) for the authoritative wor
 - [Product Thesis](docs/PRODUCT_THESIS.md) - Core user, problem, and promise
 - [Architecture Principles](docs/ARCHITECTURE_PRINCIPLES.md) - Design principles for development
 - [Continuous-Integration Policy](docs/CI_POLICY.md) - Root checks, action pinning, concurrency, timeout, and cost-control policy
+- [Toolchain Compatibility Policy](docs/TOOLCHAIN_POLICY.md) - Shared Node/npm and React compatibility rules
 - [Desktop Migration Plan](docs/DESKTOP_MIGRATION_PLAN.md) - Controlled browser-to-desktop migration sequence
 - [Desktop Feature-Parity Matrix](docs/DESKTOP_FEATURE_PARITY_MATRIX.md) - Capability evidence and migration gates
 - [Cross-Platform Desktop Requirements](docs/CROSS_PLATFORM_DESKTOP_REQUIREMENTS.md) - Linux, Windows, and macOS product requirements

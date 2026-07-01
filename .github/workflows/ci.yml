@@ -1,7 +1,5 @@
 name: zcvios-ci
 
-# Root verification runs once for each pull-request head and may also be started manually.
-# Push-trigger duplication is intentionally avoided; stale runs for the same PR are cancelled.
 on:
   pull_request:
   workflow_dispatch:
@@ -19,23 +17,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      NEXTAUTH_SECRET: ci-nextauth-secret-zcvios
+      NEXTAUTH_SECRET: ci-${{ github.run_id }}-${{ github.run_attempt }}
       NEXTAUTH_URL: http://localhost:3001
       REACT_APP_BACKEND_URL: http://localhost:3001
       ZCVIOS_TEST_DATABASE_PATH: ${{ github.workspace }}/ci-integration.db
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22.18.0
+          cache: npm
 
       - name: Setup Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
 
