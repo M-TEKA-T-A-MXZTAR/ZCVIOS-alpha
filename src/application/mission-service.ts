@@ -3,8 +3,8 @@ import {
   RESET_MISSION,
   selectGeneratedMission,
   toMissionPayload,
-} from "@/core/missions";
-import type { MissionGenerator, MissionRepository } from "@/application/ports";
+} from "../core/missions";
+import type { MissionGenerator, MissionRepository } from "./ports";
 
 const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
 
