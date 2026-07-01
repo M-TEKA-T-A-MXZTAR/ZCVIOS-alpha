@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      NEXTAUTH_SECRET: ci-nextauth-secret-zcvios
+      NEXTAUTH_SECRET: ci-${{ github.run_id }}-${{ github.run_attempt }}
       NEXTAUTH_URL: http://localhost:3001
       REACT_APP_BACKEND_URL: http://localhost:3001
       ZCVIOS_TEST_DATABASE_PATH: ${{ github.workspace }}/ci-integration.db
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 22.18.0
           cache: 'npm'
 
       - name: Setup Python
