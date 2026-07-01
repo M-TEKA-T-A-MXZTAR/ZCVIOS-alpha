@@ -33,10 +33,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
+          node-version: 22.18.0
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
 
       - name: Install desktop frontend dependencies
-        run: npm install --prefix desktop --ignore-scripts
+        run: npm ci --prefix desktop --ignore-scripts
 
       - name: Install Linux packaging dependencies
         env:
