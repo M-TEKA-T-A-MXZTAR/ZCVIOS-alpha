@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { resolveActiveProfile } from "../src/application/identity.ts";
+import { resolveActiveProfile } from "../src/application/identity";
 
 const verifyProfileResolution = async () => {
   const browserProfile = {
