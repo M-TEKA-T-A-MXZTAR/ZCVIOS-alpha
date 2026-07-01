@@ -62,8 +62,11 @@ jobs:
       - name: Verify core calculations
         run: npx tsx scripts/verify-core-engine.ts
 
-      - name: Verify application services
-        run: npx tsx scripts/verify-application-services.mjs
+      - name: Verify mission application service
+        run: npx tsx scripts/verify-application-services.mjs mission
+
+      - name: Verify report application service
+        run: npx tsx scripts/verify-application-services.mjs report
 
       - name: Verify identity boundary
         run: npx tsx scripts/verify-identity-boundary.mjs
