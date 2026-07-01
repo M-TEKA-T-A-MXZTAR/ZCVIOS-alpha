@@ -10,7 +10,8 @@ concurrency:
   group: zcvios-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   verify:
