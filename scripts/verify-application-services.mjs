@@ -2,51 +2,53 @@ import assert from "node:assert/strict";
 import { createMissionService } from "../src/application/mission-service.ts";
 import { createReportService } from "../src/application/report-service.ts";
 
-const verifyMissionService = async () => {
-  const today = new Date(2026, 5, 30);
-  const weekStart = new Date(2026, 5, 29);
-  const existingMission = {
-    lever: "Distribution",
-    primaryTask: "Publish one offer.",
-    supportTask: "Reuse an existing asset.",
-    doNotDoReminder: "Do not redesign branding.",
-    recommendedMinutes: 60,
-    startNowStep: "Open the offer draft.",
-    successDefinition: "Offer published.",
-    source: "TEMPLATE",
-  };
+const today = new Date(2026, 5, 30);
+const weekStart = new Date(2026, 5, 29);
+const existingMission = {
+  lever: "Distribution",
+  primaryTask: "Publish one offer.",
+  supportTask: "Reuse an existing asset.",
+  doNotDoReminder: "Do not redesign branding.",
+  recommendedMinutes: 60,
+  startNowStep: "Open the offer draft.",
+  successDefinition: "Offer published.",
+  source: "TEMPLATE",
+};
 
-  let missionContext = {
+const createMissionHarness = (contextOverrides = {}) => {
+  const state = {
+    includeExistingMission: null,
+    savedMission: null,
+    generatorCalls: 0,
+  };
+  const context = {
     businessType: "digital",
     commandMode: true,
     weeklyLever: "Distribution",
     lastPauseEnd: null,
     lastLeverLogDate: new Date(2026, 5, 29),
     existingMission,
+    ...contextOverrides,
   };
-
-  const missionState = {
-    includeExistingMission: false,
-    savedMission: null,
-    generatorCalls: 0,
-  };
-
-  const missionRepository = {
+  const repository = {
     getMissionContext: async (query) => {
-      missionState.includeExistingMission = query.includeExistingMission;
-      return missionContext;
+      state.includeExistingMission = query.includeExistingMission;
+      return context;
     },
     saveMission: async ({ mission }) => {
-      missionState.savedMission = mission;
+      state.savedMission = mission;
       return mission;
     },
   };
-
-  const missionGenerator = {
-    generate: async ({ lever, context }) => {
-      missionState.generatorCalls += 1;
-      assert.equal(lever, "Distribution");
-      assert.equal(context, "Business type: digital. Weekly lever: Distribution.");
+  const generator = {
+    generate: async ({ lever, context: promptContext }) => {
+      state.generatorCalls += 1;
+      assert.equal(lever, "Distribution", "Generator must receive the active weekly lever.");
+      assert.equal(
+        promptContext,
+        "Business type: digital. Weekly lever: Distribution.",
+        "Generator context must remain deterministic.",
+      );
       return {
         primaryTask: "Publish an AI-assisted offer.",
         supportTask: "Reuse one existing asset.",
@@ -58,67 +60,68 @@ const verifyMissionService = async () => {
       };
     },
   };
+  return {
+    state,
+    service: createMissionService({ repository, generator }),
+  };
+};
 
-  const missionService = createMissionService({
-    repository: missionRepository,
-    generator: missionGenerator,
-  });
-
-  const existingResult = await missionService.getOrCreateDailyMission({
+const verifyExistingMission = async () => {
+  const { service, state } = createMissionHarness();
+  const result = await service.getOrCreateDailyMission({
     userId: "local-user",
     apiKey: null,
     today,
     weekStart,
   });
-  assert.equal(missionState.includeExistingMission, true, "Existing mission lookup must be enabled.");
-  assert.equal(existingResult.mission.primaryTask, "Publish one offer.");
-  assert.equal(existingResult.inactivityLevel, 1);
-  assert.equal(missionState.savedMission, null);
-  assert.equal(missionState.generatorCalls, 0);
+  assert.equal(state.includeExistingMission, true, "Existing mission lookup must be enabled.");
+  assert.equal(result.mission.primaryTask, "Publish one offer.");
+  assert.equal(result.inactivityLevel, 1);
+  assert.equal(state.savedMission, null);
+  assert.equal(state.generatorCalls, 0);
+  console.log("PASS: existing mission application-service path verified.");
+};
 
-  missionContext = {
-    ...missionContext,
+const verifyResetMission = async () => {
+  const { service, state } = createMissionHarness({
     existingMission: null,
     lastPauseEnd: today,
-  };
-  const resetResult = await missionService.getOrCreateDailyMission({
+  });
+  const result = await service.getOrCreateDailyMission({
     userId: "local-user",
     apiKey: null,
     today,
     weekStart,
   });
-  assert.equal(resetResult.mission.source, "RESET");
-  assert.equal(missionState.savedMission?.source, "RESET");
-  assert.equal(missionState.generatorCalls, 0);
+  assert.equal(state.includeExistingMission, true);
+  assert.equal(result.mission.source, "RESET");
+  assert.equal(state.savedMission?.source, "RESET");
+  assert.equal(state.generatorCalls, 0);
+  console.log("PASS: reset mission application-service path verified.");
+};
 
-  missionState.savedMission = null;
-  missionContext = {
-    ...missionContext,
-    existingMission,
-    lastPauseEnd: null,
-  };
-  const generatedResult = await missionService.getOrCreateDailyMission({
+const verifyGeneratedMission = async () => {
+  const { service, state } = createMissionHarness();
+  const result = await service.getOrCreateDailyMission({
     userId: "local-user",
     apiKey: "test-key",
     today,
     weekStart,
     forceRegenerate: true,
   });
-  assert.equal(missionState.includeExistingMission, false);
-  assert.equal(generatedResult.mission.primaryTask, "Publish an AI-assisted offer.");
-  assert.equal(generatedResult.mission.canUseAi, true);
-  assert.equal(missionState.savedMission?.source, "AI");
-  assert.equal(missionState.generatorCalls, 1);
-
-  console.log("PASS: mission application service verified with in-memory adapters.");
+  assert.equal(state.includeExistingMission, false);
+  assert.equal(result.mission.primaryTask, "Publish an AI-assisted offer.");
+  assert.equal(result.mission.canUseAi, true);
+  assert.equal(state.savedMission?.source, "AI");
+  assert.equal(state.generatorCalls, 1);
+  console.log("PASS: generated mission application-service path verified.");
 };
 
 const verifyReportService = async () => {
   const firstWeek = new Date(2026, 5, 1);
   const secondWeek = new Date(2026, 5, 8);
   const reportState = { weeklyQuery: null };
-
-  const reportRepository = {
+  const repository = {
     getWeeklyReportSnapshot: async (query) => {
       reportState.weeklyQuery = query;
       return {
@@ -148,42 +151,41 @@ const verifyReportService = async () => {
       ],
     }),
   };
-
-  const reportService = createReportService(reportRepository);
-  const weeklyReport = await reportService.buildWeeklyReport({
-    userId: "local-user",
-    weekStart: secondWeek,
-  });
-  assert.equal(weeklyReport.revenue, 120);
-  assert.equal(weeklyReport.leverEhr, 60);
-  assert.equal(weeklyReport.fullLoggingEnabled, true);
-  assert.equal(
-    reportState.weeklyQuery.historyStart.getTime(),
-    new Date(2026, 4, 18).getTime(),
-    "Weekly report history must begin three weeks before the requested week.",
-  );
+  const service = createReportService(repository);
+  const weekly = await service.buildWeeklyReport({ userId: "local-user", weekStart: secondWeek });
+  assert.equal(weekly.revenue, 120);
+  assert.equal(weekly.leverEhr, 60);
+  assert.equal(weekly.fullLoggingEnabled, true);
+  assert.equal(reportState.weeklyQuery.historyStart.getTime(), new Date(2026, 4, 18).getTime());
   assert.equal(reportState.weeklyQuery.weekEnd.getHours(), 23);
-
-  const monthlyReport = await reportService.buildMonthlyReport({
+  const monthly = await service.buildMonthlyReport({
     userId: "local-user",
     now: new Date(2026, 3, 1, 20, 0),
   });
-  assert.equal(monthlyReport.monthsActive, 2);
-  assert.equal(monthlyReport.totalRevenue, 180);
-  assert.equal(monthlyReport.totalHours, 4);
-  assert.equal(monthlyReport.averageEhr, 45);
-
+  assert.equal(monthly.monthsActive, 2);
+  assert.equal(monthly.totalRevenue, 180);
+  assert.equal(monthly.totalHours, 4);
+  assert.equal(monthly.averageEhr, 45);
   console.log("PASS: report application service verified with in-memory adapters.");
+};
+
+const verifiers = {
+  "mission-existing": verifyExistingMission,
+  "mission-reset": verifyResetMission,
+  "mission-generated": verifyGeneratedMission,
+  report: verifyReportService,
 };
 
 const mode = process.argv[2] ?? "all";
 
 const run = async () => {
-  if (mode === "all" || mode === "mission") await verifyMissionService();
-  if (mode === "all" || mode === "report") await verifyReportService();
-  if (!["all", "mission", "report"].includes(mode)) {
-    throw new Error(`Unknown application-service verification mode: ${mode}`);
+  if (mode === "all") {
+    for (const verifier of Object.values(verifiers)) await verifier();
+    return;
   }
+  const verifier = verifiers[mode];
+  if (!verifier) throw new Error(`Unknown application-service verification mode: ${mode}`);
+  await verifier();
 };
 
 run().catch((error) => {
