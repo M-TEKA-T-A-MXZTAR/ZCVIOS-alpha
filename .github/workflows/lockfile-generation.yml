@@ -1,0 +1,68 @@
+name: zcvios-lockfile-generation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/lockfile-generation.yml'
+
+concurrency:
+  group: zcvios-lockfile-generation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: Generate reviewed lockfiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.18.0
+          cache: npm
+
+      - name: Pin Prisma manifests for lock generation
+        run: |
+          npm pkg set 'dependencies.@prisma/adapter-libsql=7.8.0'
+          npm pkg set 'dependencies.@prisma/client=7.8.0'
+          npm pkg set 'devDependencies.prisma=7.8.0'
+
+      - name: Generate root lockfile
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Generate desktop lockfile
+        run: npm install --prefix desktop --package-lock-only --ignore-scripts
+
+      - name: Verify generated lock metadata
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const root = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const desktop = JSON.parse(fs.readFileSync('desktop/package-lock.json', 'utf8'));
+          for (const name of ['@prisma/adapter-libsql', '@prisma/client']) {
+            if (root.packages[''].dependencies[name] !== '7.8.0') throw new Error(`${name} root metadata mismatch`);
+            if (root.packages[`node_modules/${name}`].version !== '7.8.0') throw new Error(`${name} resolved version mismatch`);
+          }
+          if (root.packages[''].devDependencies.prisma !== '7.8.0') throw new Error('Prisma CLI root metadata mismatch');
+          if (root.packages['node_modules/prisma'].version !== '7.8.0') throw new Error('Prisma CLI resolved version mismatch');
+          if (desktop.packages[''].name !== 'zcvios-desktop') throw new Error('Desktop lockfile root mismatch');
+          console.log('PASS: Prisma 7.8.0 and desktop lock metadata generated.');
+          NODE
+
+      - name: Upload generated lockfiles
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zcvios-generated-lockfiles
+          path: |
+            package-lock.json
+            desktop/package-lock.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
